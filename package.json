@@ -1,0 +1,22 @@
+{
+  "name": "static_frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "near-api-js": "^0.44.2",
+    "parcel": "^2.3.2",
+    "regenerator-runtime": "^0.13.9",
+    "webpack": "^5.67.0"
+  },
+  "devDependencies": {
+    "process": "^0.11.10",
+    "webpack-cli": "^4.9.2"
+  }
+}
