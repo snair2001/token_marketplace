@@ -1,4 +1,4 @@
-# Markeplace
+# Marketplace
 
 nft contract: royalties.evin.testnet<br>
 marketplace contract: market.evin.testnet<br>
