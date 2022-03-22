@@ -1,3 +1,4 @@
+import {populateSales} from "./saleHandling.js"
 import { connect, Contract, keyStores, WalletConnection } from 'near-api-js'
 import getConfig from './config'
 
@@ -33,4 +34,31 @@ export function logout() {
 
 export function login() {
   window.walletConnection.requestSignIn(nearConfig.nftContract)
+}
+
+export function clearContentBody(){
+  let content=document.getElementById("content");
+
+  let essential=["header", "footer"]
+  let toBeDeleted=[];
+
+  for(let i=0; i<content.childNodes.length; i++){
+    if (!essential.includes(content.childNodes[i].id))
+      toBeDeleted.push(content.childNodes[i])
+  }
+
+  for(let i=0; i<toBeDeleted.length; i++)
+    content.removeChild(toBeDeleted[i])
+}
+
+export function provokeLogin(container, msg){
+  let state=window.walletConnection.isSignedIn();
+
+  if(!state){
+    console.log("yo from this shit")
+    let warning_message=document.createElement("div");
+    warning_message.id='provoke_login'
+    warning_message.textContent=msg;
+    container.prepend(warning_message);
+  }
 }

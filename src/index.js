@@ -1,8 +1,8 @@
-import {createItem,initialPrompt} from "./listener.js";
-import * as sale from "./saleHandling.js"
+import {populateSales} from "./saleHandling.js"
+import * as mint from "./mint.js"
 
 import 'regenerator-runtime/runtime'
-import { initContract, login, logout } from './utils'
+import { initContract, login, logout, clearContentBody, provokeLogin} from './utils'
 
 function createHeader(){
 	const header=document.createElement("div");
@@ -11,7 +11,11 @@ function createHeader(){
 	let state=window.walletConnection.isSignedIn();
 	
 	header.innerHTML=`	<div id='name'>Ignitus Networks</div>
-						<button id="login_button">${state ? 'Log Out' : 'Log In'}</button>`
+						<div id="tabs">
+							<div class="cursor" id="home_redirect">Home</div>
+							<div class="cursor" id="mint_redirect">Mint</div>
+							<button id="login_button">${state ? 'Log Out' : 'Log In'}</button>
+						</div>`
 
 	let button=header.querySelector('#login_button');
 
@@ -23,7 +27,12 @@ function createHeader(){
 			login();
 		}
 	})
-
+	
+	let homeButton=header.querySelector('#home_redirect');
+	homeButton.addEventListener('click', home);
+	
+	let mintButton=header.querySelector('#mint_redirect');
+	mintButton.addEventListener('click', mint.createDOM);
 	return header;
 }
 
@@ -36,7 +45,18 @@ function welcome(){
 								<div id='subtext'>It is one of the largest NFT marketplaces around!</div>
 							</div>`
 
-	const item=createItem("imgs/image_0.jpg","An Example NFT","2 units",280,false);
+	const item=document.createElement('div');
+
+	item.innerHTML=`<img src="imgs/image_0.jpg" height=280 class='item_image'>
+					<div class='item_info'>
+						<div class='item_left'>
+							<div class='item_owner'>An Example NFT</div>
+							<div class='item_bid'>Cost: 2 units</div>
+						</div>
+					</div>`
+
+	item.id='item_container';
+	//createItem("imgs/image_0.jpg","An Example NFT","2 units",280,false);
 
 	container.appendChild(item);
 
@@ -47,14 +67,7 @@ function createBody(){
 	const container=document.createElement("div");
 	container.id="body_container";
 
-	let state=window.walletConnection.isSignedIn();
-
-	if(!state){
-		let warning_message=document.createElement("div");
-		warning_message.id='provoke_login'
-		warning_message.textContent='Please Log In with your NEAR Wallet To Buy the Nfts on Sale!'
-		container.appendChild(warning_message);
-	}
+	provokeLogin(container,'Please Log In with your NEAR Wallet To Buy the Nfts on Sale!');
 
 	container.innerHTML+=`<div id="body_title">Items At Sale From Our Nft Contract!</div>
 						<div id="main_sale_container"></div>`
@@ -62,7 +75,7 @@ function createBody(){
 }
 
 function footer(){
-	const footer=document.createElement("div");
+	const footer=document.createElement("footer");
 	footer.id='footer';
 	footer.innerHTML=`<div id="footer_content">Made by Ignitus Networks, powered by NEAR</div>`;
 	return footer;
@@ -77,6 +90,17 @@ function initialSite(){
 	content.appendChild(footer());
 }
 
-window.nearInitPromise = initContract().then(initialSite).then(sale.populateSales);
+function home(){
+  clearContentBody()
+  let content=document.getElementById("content");
+  let footer=document.getElementById("footer");
 
-setInterval(sale.populateSales, 2000);
+  content.insertBefore(welcome(), footer);
+  content.insertBefore(createBody(), footer);
+
+  populateSales()
+}
+
+window.nearInitPromise = initContract().then(initialSite).then(populateSales);
+
+//setInterval(sale.populateSales, 2000);		//Causing problems since I am deleting the containers
