@@ -15171,10 +15171,23 @@ function tokenModalOpen(e) {
         const sale_price = parseFloat(document.getElementById("token_sale_price").value);
         if (!sale_price) {
             alert("Please fill the fields appropriately.");
-            button.disabled = false;
             return;
         }
-        if (typeof sale_price != "number") alert("Sale must be a number");
+        if (typeof sale_price != "number") {
+            alert("Sale must be a number");
+            return;
+        }
+        let minimum_balance = await window.marketplace_contract.storage_minimum_balance();
+        let current_storage = await window.marketplace_contract.storage_balance_of({
+            "account_id": window.accountId
+        });
+        let totalSales = await window.marketplace_contract.get_supply_by_owner_id({
+            "account_id": window.accountId
+        });
+        if (current_storage - minimum_balance * totalSales <= minimum_balance) {
+            alert('Not enough storage. Please visit the Storage section to get storage.');
+            return;
+        }
         const sale_conditions = (sale_price * NEAR_IN_YOCTO).toLocaleString('fullwide', {
             useGrouping: false
         });
@@ -15257,7 +15270,11 @@ async function giveBalance() {
         let result = await window.marketplace_contract.storage_balance_of({
             "account_id": window.accountId
         });
-        return `${(result / 10 ** 24).toFixed(2)} NEAR`;
+        let totalSales = await window.marketplace_contract.get_supply_by_owner_id({
+            "account_id": window.accountId
+        });
+        let minimum_balance = await window.marketplace_contract.storage_minimum_balance();
+        return `${(result / 10 ** 24).toFixed(2)} NEAR out of which ${(totalSales * minimum_balance / 10 ** 24).toFixed(2)} NEAR is locked in sales.`;
     } catch (e) {
         alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
         throw e;

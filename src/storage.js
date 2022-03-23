@@ -48,7 +48,9 @@ async function storageDOM(){
 async function giveBalance(){
 	try{
 		let result= await window.marketplace_contract.storage_balance_of({"account_id":window.accountId})
-		return `${(result/10**24).toFixed(2)} NEAR`
+		let totalSales=await window.marketplace_contract.get_supply_by_owner_id({"account_id":window.accountId})
+		let minimum_balance=await window.marketplace_contract.storage_minimum_balance()
+		return `${(result/10**24).toFixed(2)} NEAR out of which ${(totalSales*minimum_balance/10**24).toFixed(2)} NEAR is locked in sales.`
 	}
 	catch(e){
 		alert(
