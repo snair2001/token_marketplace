@@ -521,6 +521,8 @@ function hmrAcceptRun(bundle, id) {
 },{}],"8lqZg":[function(require,module,exports) {
 var _saleHandlingJs = require("./saleHandling.js");
 var _mintJs = require("./mint.js");
+var _tokensTabJs = require("./tokensTab.js");
+var _storageJs = require("./storage.js");
 var _runtime = require("regenerator-runtime/runtime");
 var _utils = require("./utils");
 function createHeader() {
@@ -531,6 +533,8 @@ function createHeader() {
 						<div id="tabs">
 							<div class="cursor" id="home_redirect">Home</div>
 							<div class="cursor" id="mint_redirect">Mint</div>
+							<div class="cursor" id="token_redirect">My Tokens</div>
+							<div class="cursor" id="storage_redirect">Storage</div>
 							<button id="login_button">${state ? 'Log Out' : 'Log In'}</button>
 						</div>`;
     let button = header.querySelector('#login_button');
@@ -542,6 +546,17 @@ function createHeader() {
     homeButton.addEventListener('click', home);
     let mintButton = header.querySelector('#mint_redirect');
     mintButton.addEventListener('click', _mintJs.createDOM);
+    let tokensTitle = header.querySelector('#token_redirect');
+    let storageTitle = header.querySelector('#storage_redirect');
+    if (!state) {
+        tokensTitle.style.display = 'none';
+        storageTitle.style.display = 'none';
+    } else {
+        tokensTitle.style.display = 'block';
+        storageTitle.style.display = 'block';
+    }
+    tokensTitle.addEventListener('click', _tokensTabJs.createDOM);
+    storageTitle.addEventListener('click', _storageJs.createDOM);
     return header;
 }
 function welcome() {
@@ -594,8 +609,9 @@ function home() {
     _saleHandlingJs.populateSales();
 }
 window.nearInitPromise = _utils.initContract().then(initialSite).then(_saleHandlingJs.populateSales); //setInterval(sale.populateSales, 2000);		//Causing problems since I am deleting the containers
+ //not needed anyways since they can reload 
 
-},{"./saleHandling.js":"bjWno","regenerator-runtime/runtime":"dXNgZ","./utils":"en4he","./mint.js":"cmNd3"}],"bjWno":[function(require,module,exports) {
+},{"./saleHandling.js":"bjWno","regenerator-runtime/runtime":"dXNgZ","./utils":"en4he","./mint.js":"cmNd3","./tokensTab.js":"fWYHB","./storage.js":"bkDau"}],"bjWno":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "populateSales", ()=>populateSales
@@ -1334,10 +1350,13 @@ async function initContract() {
             'get_supply_by_owner_id',
             'get_sales_by_nft_contract_id',
             'get_supply_by_nft_contract_id',
-            'storage_minimum_balance'
+            'storage_minimum_balance',
+            'storage_balance_of'
         ],
         changeMethods: [
-            'offer'
+            'offer',
+            'storage_deposit',
+            'storage_withdraw'
         ]
     });
 }
@@ -1362,7 +1381,6 @@ function clearContentBody() {
 function provokeLogin(container, msg) {
     let state = window.walletConnection.isSignedIn();
     if (!state) {
-        console.log("yo from this shit");
         let warning_message = document.createElement("div");
         warning_message.id = 'provoke_login';
         warning_message.textContent = msg;
@@ -15084,6 +15102,195 @@ async function mintListener() {
     }
 }
 
-},{"./utils.js":"en4he","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["7nZVA","8lqZg"], "8lqZg", "parcelRequire9893")
+},{"./utils.js":"en4he","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"fWYHB":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "createDOM", ()=>createDOM
+);
+var _utilsJs = require("./utils.js");
+const GAS_FEE = `100000000000000`;
+const NEAR_IN_YOCTO = 1000000000000000000000000;
+async function createDOM() {
+    let content = document.getElementById("content");
+    let footer = document.getElementById("footer");
+    _utilsJs.clearContentBody();
+    let container = document.createElement("div");
+    container.id = "tokens_tab";
+    container.innerHTML = `<h1>Tokens</h1>`;
+    container.append(await tokensDOM());
+    content.insertBefore(container, footer);
+}
+async function tokensDOM() {
+    let container = document.createElement('div');
+    container.id = "items";
+    //Shows a maximum of 15 tokens. Note this
+    let result = await window.nft_contract.nft_tokens_for_owner({
+        account_id: window.accountId,
+        limit: 15
+    });
+    for(let i = 0; i < result.length; i++)container.append(tokenFromObject(result[i]));
+    return container;
+}
+function tokenFromObject(tokenObject) {
+    let token = document.createElement('div');
+    token.innerHTML = `<img class='cursor' src=${tokenObject.metadata.media} height='200px' class='item_image'>
+					<div class='item_owner'>${tokenObject.metadata.title}</div>`;
+    let img = token.querySelector("img");
+    img.token = tokenObject;
+    img.addEventListener('click', tokenModalOpen);
+    return token;
+}
+function tokenModalOpen(e) {
+    let { container , modal  } = createModal("token_info");
+    let body = document.body;
+    body.append(container);
+    body.classList.add('modal-open');
+    let media = e.target.token.metadata.media;
+    let title = e.target.token.metadata.title;
+    let description = e.target.token.metadata.description;
+    let tokenId = e.target.token.token_id;
+    modal.innerHTML = `<img src=${media} height="200px">
+					<div style="display:flex; flex-direction:column; gap:15px">
+	                	<div class="token_static_info">
+		                	<div class='token_main_text'>Title</div>
+		                	<div class='token_subtext'>${title}</div>
+		                </div>
+		                <div class="token_static_info">
+		                	<div class='token_main_text'>Description</div>
+		                	<div class='token_subtext'>${description}</div>
+		                </div>
+		                <div id="approval_section">
+		                	<div class='token_main_text'>Approve to Marketplace</div>
+		                	<input id="token_sale_price" type="number" placeholder="Sale Price">
+		                	<button id="submit_for_sale"> Submit </button>
+		                </div>
+		                <button id="close_modal">Close</button>
+	                </div>`;
+    if (e.target.token.approved_account_ids["market.evin.testnet"] != undefined) modal.querySelector("#approval_section").style.display = "none";
+    modal.querySelector("#submit_for_sale").addEventListener("click", async (e)=>{
+        const sale_price = parseFloat(document.getElementById("token_sale_price").value);
+        if (!sale_price) {
+            alert("Please fill the fields appropriately.");
+            button.disabled = false;
+            return;
+        }
+        if (typeof sale_price != "number") alert("Sale must be a number");
+        const sale_conditions = (sale_price * NEAR_IN_YOCTO).toLocaleString('fullwide', {
+            useGrouping: false
+        });
+        try {
+            await window.nft_contract.nft_approve({
+                "token_id": tokenId,
+                "account_id": "market.evin.testnet",
+                "msg": JSON.stringify({
+                    sale_conditions
+                })
+            }, GAS_FEE, (NEAR_IN_YOCTO / 10).toLocaleString('fullwide', {
+                useGrouping: false
+            }));
+        } catch (e1) {
+            alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+            throw e1;
+        }
+    });
+    modal.querySelector("#close_modal").addEventListener("click", ()=>{
+        body.classList.remove('modal-open');
+        container.remove();
+    });
+}
+function createModal(modalId) {
+    let container = document.createElement("div");
+    container.classList.add('modal_bg');
+    let modal = document.createElement("div");
+    modal.classList.add("modal");
+    modal.id = modalId;
+    container.appendChild(modal);
+    return {
+        container,
+        modal
+    };
+}
+
+},{"./utils.js":"en4he","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bkDau":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "createDOM", ()=>createDOM
+);
+var _utilsJs = require("./utils.js");
+const GAS_FEE = `100000000000000`;
+const NEAR_IN_YOCTO = 1000000000000000000000000;
+async function createDOM() {
+    let content = document.getElementById("content");
+    let footer = document.getElementById("footer");
+    _utilsJs.clearContentBody();
+    let container = document.createElement("div");
+    container.id = "storage_tab";
+    container.innerHTML = `<h1>Storage Details</h1>`;
+    container.append(await storageDOM());
+    content.insertBefore(container, footer);
+}
+async function storageDOM() {
+    let container = document.createElement('div');
+    let storage_balance = await giveBalance();
+    container.innerHTML = `<div>
+							<h2>Balance<h2>
+							<div class="storage_subtext">${storage_balance}</div>
+						</div>
+						<div>
+							<h2>Deposit<h2>
+							<input id="storage_amount" type="text" placeholder="Storage Deposit in NEAR">
+							<button id="storage_submit">Submit!</button>
+						</div>
+						<div>
+							<h2>Withdraw<h2>
+							<div class="storage_subtext">Click on the button below to withdraw your current storage balance</div>
+							<button id="storage_withdraw">Withdraw</button>
+						</div>`;
+    let deposit_button = container.querySelector('#storage_submit');
+    deposit_button.addEventListener('click', deposit_storage);
+    let withdraw_button = container.querySelector('#storage_withdraw');
+    withdraw_button.addEventListener('click', withdraw_storage);
+    return container;
+}
+async function giveBalance() {
+    try {
+        let result = await window.marketplace_contract.storage_balance_of({
+            "account_id": window.accountId
+        });
+        return `${(result / 10 ** 24).toFixed(2)} NEAR`;
+    } catch (e) {
+        alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+        throw e;
+    }
+}
+async function deposit_storage() {
+    const amount = parseFloat(document.getElementById('storage_amount').value);
+    if (!amount) {
+        alert("Please fill the field appropriately.");
+        return;
+    }
+    if (typeof amount != "number") alert("Deposit must be a number");
+    const deposit = (amount * NEAR_IN_YOCTO).toLocaleString('fullwide', {
+        useGrouping: false
+    });
+    try {
+        await window.marketplace_contract.storage_deposit({
+        }, "300000000000000", deposit);
+    } catch (e) {
+        alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+        throw e;
+    }
+}
+async function withdraw_storage() {
+    try {
+        await window.marketplace_contract.storage_withdraw({
+        }, "300000000000000", "1");
+    } catch (e) {
+        alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+        throw e;
+    }
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./utils.js":"en4he"}]},["7nZVA","8lqZg"], "8lqZg", "parcelRequire9893")
 
 //# sourceMappingURL=index.975ef6c8.js.map

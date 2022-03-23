@@ -20,8 +20,8 @@ export async function initContract() {
   
   //Just to check working on another contract from the same frontend
   window.marketplace_contract = await new Contract(window.walletConnection.account(), 'market.evin.testnet', {
-    viewMethods: ['get_supply_sales', 'get_supply_by_owner_id', 'get_sales_by_nft_contract_id', 'get_supply_by_nft_contract_id','storage_minimum_balance'],
-    changeMethods: ['offer'],
+    viewMethods: ['get_supply_sales', 'get_supply_by_owner_id', 'get_sales_by_nft_contract_id', 'get_supply_by_nft_contract_id','storage_minimum_balance','storage_balance_of'],
+    changeMethods: ['offer', 'storage_deposit', 'storage_withdraw'],
   })
   
 }
@@ -55,7 +55,6 @@ export function provokeLogin(container, msg){
   let state=window.walletConnection.isSignedIn();
 
   if(!state){
-    console.log("yo from this shit")
     let warning_message=document.createElement("div");
     warning_message.id='provoke_login'
     warning_message.textContent=msg;

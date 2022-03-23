@@ -1,5 +1,7 @@
 import {populateSales} from "./saleHandling.js"
 import * as mint from "./mint.js"
+import * as token from "./tokensTab.js"
+import * as storage from "./storage.js"
 
 import 'regenerator-runtime/runtime'
 import { initContract, login, logout, clearContentBody, provokeLogin} from './utils'
@@ -14,6 +16,8 @@ function createHeader(){
 						<div id="tabs">
 							<div class="cursor" id="home_redirect">Home</div>
 							<div class="cursor" id="mint_redirect">Mint</div>
+							<div class="cursor" id="token_redirect">My Tokens</div>
+							<div class="cursor" id="storage_redirect">Storage</div>
 							<button id="login_button">${state ? 'Log Out' : 'Log In'}</button>
 						</div>`
 
@@ -33,6 +37,22 @@ function createHeader(){
 	
 	let mintButton=header.querySelector('#mint_redirect');
 	mintButton.addEventListener('click', mint.createDOM);
+
+	let tokensTitle=header.querySelector('#token_redirect')
+	let storageTitle=header.querySelector('#storage_redirect')
+	if(!state){
+		tokensTitle.style.display='none' 
+		storageTitle.style.display='none' 
+	}
+	else{
+		tokensTitle.style.display='block' 
+		storageTitle.style.display='block' 
+	}
+
+	tokensTitle.addEventListener('click', token.createDOM);
+	storageTitle.addEventListener('click', storage.createDOM);
+
+
 	return header;
 }
 
@@ -104,3 +124,4 @@ function home(){
 window.nearInitPromise = initContract().then(initialSite).then(populateSales);
 
 //setInterval(sale.populateSales, 2000);		//Causing problems since I am deleting the containers
+												//not needed anyways since they can reload 
