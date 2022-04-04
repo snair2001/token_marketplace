@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&family=PT+Sans&display=swap');
-
+@import "https://fonts.googleapis.com/css2?family=Nunito:wght@700&family=PT+Sans&display=swap";
 body{
 	font-family: 'Nunito', sans-serif;
 	margin: 0;
@@ -72,7 +71,7 @@ body.modal-open{
 
 #mintDOM{
 	min-height: 70vh;
-	background: url(../dist/imgs/image_1.jpg);
+	background: url("image_1.261f09e8.jpg");
 	background-size: cover;
 	display: flex;
 	flex-direction: column;
@@ -96,7 +95,7 @@ body.modal-open{
 
 #auctions_tab{
 	min-height: 70vh;
-	background: url(../dist/imgs/image_1.jpg);
+	background: url("image_1.261f09e8.jpg");
 	background-size: cover;
 	display: flex;
 	flex-direction: column;
@@ -109,7 +108,7 @@ body.modal-open{
 
 #tokens_tab{
 	min-height: 70vh;
-	background: url(../dist/imgs/image_1.jpg);
+	background: url("image_1.261f09e8.jpg");
 	background-size: cover;
 	display: flex;
 	flex-direction: column;
@@ -131,6 +130,7 @@ body.modal-open{
 	font-size: 12px;
 	font-weight: 10;
 }
+
 /* Modal props */
 
 .modal_bg{
@@ -172,7 +172,7 @@ body.modal-open{
 
 #storage_tab{
 	min-height: 70vh;
-	background: url(../dist/imgs/image_1.jpg);
+	background: url("image_1.261f09e8.jpg");
 	background-size: cover;
 	display: flex;
 	flex-direction: column;
@@ -186,6 +186,7 @@ body.modal-open{
 }
 
 /* Sale items style */
+
 .item_info{
 	display: flex;
 	justify-content: space-between;
@@ -260,3 +261,4 @@ button:hover {
 	padding: 0 5px;
 	text-decoration: underline;
 }
+/*# sourceMappingURL=index.2cdaf7bc.css.map */

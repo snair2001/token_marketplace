@@ -65,7 +65,7 @@ function tokenModalOpen(e){
 		                	<div class='token_subtext'>${description}</div>
 		                </div>
 		                <div id="approval_section">
-		                	<div class='token_main_text'>Approve to Marketplace</div>
+		                	<div class='token_main_text'>List on Marketplace</div>
 		                	<input id="token_sale_price" type="number" placeholder="Sale Price">
 		                	<button id="submit_for_sale"> Submit </button>
 		                </div>
