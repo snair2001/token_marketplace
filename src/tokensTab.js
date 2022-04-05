@@ -84,7 +84,6 @@ async function tokenModalOpen(e){
 	                </div>`
 
 	if (await hasOwnerListed(e.target.token)){
-		console.log('yes')
 		modal.querySelector("#approval_section").style.display="none";
 		modal.querySelector("#auction_section").style.display="none";
 	}
