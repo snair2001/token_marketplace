@@ -623,10 +623,13 @@ parcelHelpers.export(exports, "populateSales", ()=>populateSales
 async function populateSales() {
     let sales_content = document.getElementById('main_sale_container');
     try {
-        let sales = await window.marketplace_contract.get_sales_by_nft_contract_id({
+        let all_sales = await window.marketplace_contract.get_sales_by_nft_contract_id({
             'nft_contract_id': 'royalties.evin.testnet',
             'limit': 40
         });
+        //Filtered out the ones that are auctions
+        let sales = all_sales.filter((sale)=>!sale["is_auction"]
+        );
         let token_ids = sales.map((sale)=>sale.token_id
         );
         let tokens = [];
@@ -637,10 +640,7 @@ async function populateSales() {
             tokens.push(token);
         }
         let container = createSalesDOM(sales, tokens);
-        if (!sales_content.isEqualNode(container)) {
-            sales_content.textContent = "";
-            sales_content.appendChild(container);
-        }
+        sales_content.appendChild(container);
     } catch (e) {
         alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
         throw e;
@@ -659,8 +659,8 @@ function createSalesDOM(sales, tokens) {
 function createSaleFromObject(sale, token) {
     let saleDOM = document.createElement('div');
     saleDOM.id = "item_container";
-    let price_to_display = (sale.sale_conditions / 10 ** 24).toFixed(1);
-    saleDOM.innerHTML = `<img src=${token.metadata.media} height='200px' class='item_image'>
+    let price_to_display = (sale.price / 10 ** 24).toFixed(1);
+    saleDOM.innerHTML = `<img src=${token.metadata.media} height='230px' class='item_image'>
 						<div class='item_info'>
 							<div class='item_left'>
 								<div class='item_owner'>${sale.owner_id}</div>
@@ -671,7 +671,7 @@ function createSaleFromObject(sale, token) {
     let button = saleDOM.querySelector('button');
     button.token_id = sale.token_id;
     button.owner_id = sale.owner_id;
-    button.price = sale.sale_conditions;
+    button.price = sale.price;
     button.addEventListener('click', buy);
     return saleDOM;
 }
@@ -832,6 +832,7 @@ async function initContract() {
         viewMethods: [
             'get_supply_sales',
             'get_supply_by_owner_id',
+            'get_sales_by_owner_id',
             'get_sales_by_nft_contract_id',
             'get_supply_by_nft_contract_id',
             'storage_minimum_balance',
@@ -839,6 +840,8 @@ async function initContract() {
         ],
         changeMethods: [
             'offer',
+            'add_bid',
+            'end_auction',
             'storage_deposit',
             'storage_withdraw'
         ]
@@ -14564,7 +14567,7 @@ function tokenFromObject(tokenObject) {
     img.addEventListener('click', tokenModalOpen);
     return token;
 }
-function tokenModalOpen(e) {
+async function tokenModalOpen(e) {
     let { container , modal  } = createModal("token_info");
     let body = document.body;
     body.append(container);
@@ -14584,13 +14587,33 @@ function tokenModalOpen(e) {
 		                	<div class='token_subtext'>${description}</div>
 		                </div>
 		                <div id="approval_section">
-		                	<div class='token_main_text'>List on Marketplace</div>
+		                	<div class='token_main_text'>List as sale</div>
 		                	<input id="token_sale_price" type="number" placeholder="Sale Price">
 		                	<button id="submit_for_sale"> Submit </button>
 		                </div>
+		                <div id="auction_section">
+		                	<div class='token_main_text'>List as auction</div>
+		                	<form id='auction_form'>
+			                	<input id="token_auction_price" type="number" placeholder="Starting Price" step=0.01 required><br>
+			                	<label class="token_subtext">Start Time:</label>
+			                	<input id="token_auction_start_time" type="datetime-local" required><br>
+			                	<label class="token_subtext">End Time:</label>
+								<input id="token_auction_end_time" type="datetime-local" required>
+								<button id="submit_for_auction" type="submit">Submit</button>
+							</form>
+						</div>
 		                <button id="close_modal">Close</button>
 	                </div>`;
-    if (e.target.token.approved_account_ids["auction_market.evin.testnet"] != undefined) modal.querySelector("#approval_section").style.display = "none";
+    /*
+	if (e.target.token.approved_account_ids["auction_market.evin.testnet"]!=undefined){ //Change address here, or fix
+		modal.querySelector("#approval_section").style.display="none"
+		modal.querySelector("#auction_section").style.display="none"
+	}
+	*/ if (await hasOwnerListed(e.target.token)) {
+        console.log('yes');
+        modal.querySelector("#approval_section").style.display = "none";
+        modal.querySelector("#auction_section").style.display = "none";
+    }
     modal.querySelector("#submit_for_sale").addEventListener("click", async (e)=>{
         const sale_price = parseFloat(document.getElementById("token_sale_price").value);
         if (!sale_price) {
@@ -14612,15 +14635,17 @@ function tokenModalOpen(e) {
             alert('Not enough storage. Please visit the Storage section to get storage.');
             return;
         }
-        const sale_conditions = (sale_price * NEAR_IN_YOCTO).toLocaleString('fullwide', {
+        const price = (sale_price * NEAR_IN_YOCTO).toLocaleString('fullwide', {
             useGrouping: false
         });
+        const is_auction = false;
         try {
             await window.nft_contract.nft_approve({
                 "token_id": tokenId,
                 "account_id": "auction_market.evin.testnet",
                 "msg": JSON.stringify({
-                    sale_conditions
+                    price,
+                    is_auction
                 })
             }, GAS_FEE, (NEAR_IN_YOCTO / 10).toLocaleString('fullwide', {
                 useGrouping: false
@@ -14630,10 +14655,77 @@ function tokenModalOpen(e) {
             throw e1;
         }
     });
+    let formElement = modal.querySelector("#auction_form");
+    formElement.token = e.target.token;
+    formElement.addEventListener('submit', add_auction);
     modal.querySelector("#close_modal").addEventListener("click", ()=>{
         body.classList.remove('modal-open');
         container.remove();
     });
+}
+async function add_auction(e) {
+    e.preventDefault();
+    let start_time = document.getElementById('token_auction_start_time').value;
+    start_time = new Date(start_time).getTime();
+    let end_time = document.getElementById('token_auction_end_time').value;
+    end_time = new Date(end_time).getTime();
+    // Validation
+    let current_time = new Date().getTime();
+    let limit = 0; //TODO: Add limit between start time and end time
+    if (start_time < current_time) {
+        alert('Start time should be greater than current time');
+        return;
+    }
+    if (end_time < current_time) {
+        alert('End time should be greater than current time');
+        return;
+    }
+    if (end_time < start_time + limit) {
+        alert('End time should be greater than start time');
+        return;
+    }
+    start_time *= 10 ** 6;
+    start_time = start_time.toString();
+    end_time *= 10 ** 6;
+    end_time = end_time.toString();
+    const sale_price = parseFloat(document.getElementById("token_auction_price").value);
+    const price = (sale_price * NEAR_IN_YOCTO).toLocaleString('fullwide', {
+        useGrouping: false
+    });
+    const is_auction = true;
+    try {
+        await window.nft_contract.nft_approve({
+            "token_id": e.target.token.token_id,
+            "account_id": "auction_market.evin.testnet",
+            "msg": JSON.stringify({
+                price,
+                is_auction,
+                start_time,
+                end_time
+            })
+        }, GAS_FEE, (NEAR_IN_YOCTO / 10).toLocaleString('fullwide', {
+            useGrouping: false
+        }));
+    } catch (e2) {
+        alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+        throw e2;
+    }
+}
+async function hasOwnerListed(token) {
+    try {
+        let result = await window.marketplace_contract.get_sales_by_owner_id({
+            "account_id": window.accountId,
+            "limit": 1000
+        });
+        //For now this search will do, gotta update to binary search if it gets popular with a lot of nfts for an account
+        for(let i = 0; i < result.length; i++){
+            if (result[i].token_id == token.token_id) return true;
+        }
+        return false;
+    } catch (e) {
+        alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+        throw e;
+    }
 }
 function createModal(modalId) {
     let container = document.createElement("div");
@@ -14740,6 +14832,7 @@ parcelHelpers.export(exports, "createDOM", ()=>createDOM
 parcelHelpers.export(exports, "populateItems", ()=>populateItems
 );
 var _utilsJs = require("./utils.js");
+const NEAR_IN_YOCTO = 1000000000000000000000000;
 function createDOM() {
     // Creating container
     let container = document.createElement("div");
@@ -14758,6 +14851,186 @@ function createDOM() {
 async function populateItems() {
     let container = document.getElementById('auction_container');
     container.id = 'items';
+    try {
+        let all_sales = await window.marketplace_contract.get_sales_by_nft_contract_id({
+            'nft_contract_id': 'royalties.evin.testnet',
+            'limit': 40
+        });
+        // Only the ones that are auction remain
+        let sales = all_sales.filter((sale)=>sale["is_auction"]
+        );
+        let token_ids = sales.map((sale)=>sale.token_id
+        );
+        let tokens = [];
+        for(let i = 0; i < token_ids.length; i++){
+            let token = await window.nft_contract.nft_token({
+                'token_id': token_ids[i]
+            });
+            tokens.push(token);
+        }
+        createSalesDOM(sales, tokens, container);
+    } catch (e) {
+        alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+        throw e;
+    }
+}
+function createSalesDOM(sales, tokens, container) {
+    if (sales.length == 0) {
+        container.textContent = "No auctions found!";
+        return;
+    }
+    for(let i = 0; i < sales.length; i += 1)container.appendChild(createSaleFromObject(sales[i], tokens[i]));
+    return;
+}
+function createSaleFromObject(sale, token) {
+    let saleDOM = document.createElement('div');
+    saleDOM.id = "item_container";
+    let current_price = (sale.price / 10 ** 24).toFixed(1);
+    let preface = 'Starting Price';
+    if (sale.bids.length != 0) {
+        current_price = (sale.bids[0].price / 10 ** 24).toFixed(1);
+        preface = 'Latest Bid';
+    }
+    saleDOM.innerHTML = `<img src=${token.metadata.media} height='230px' class='item_image'>
+						<div class='item_info'>
+							<div class='item_left'>
+								<div class='item_owner'>${sale.owner_id}</div>
+								<div class='item_bid'>${preface}: ${current_price} NEAR</div>
+
+							</div>
+							<div>
+								<button id="details">Details</button>
+							</div>
+						</div>`;
+    let button = saleDOM.querySelector('#details');
+    button.sale = sale;
+    button.token = token;
+    button.addEventListener('click', openModal);
+    return saleDOM;
+}
+function openModal(e) {
+    let { container , modal  } = createModal("token_info");
+    let body = document.body;
+    body.append(container);
+    body.classList.add('modal-open');
+    let media = e.target.token.metadata.media;
+    let title = e.target.token.metadata.title;
+    let description = e.target.token.metadata.description;
+    let tokenId = e.target.token.token_id;
+    let isItNew = e.target.sale.bids.length == 0;
+    let current_price = isItNew ? (e.target.sale.price / 10 ** 24).toFixed(1) : (e.target.sale.bids[0].price / 10 ** 24).toFixed(1);
+    let startTime = e.target.sale.start_time / 10 ** 6;
+    startTime = new Date(startTime);
+    let endTime = e.target.sale.end_time / 10 ** 6;
+    endTime = new Date(endTime);
+    modal.innerHTML = `<img src=${media} height="200px">
+					<div style="display:flex; flex-direction:column; gap:15px">
+	                	<div class="token_static_info">
+		                	<div class='token_main_text'>Title</div>
+		                	<div class='token_subtext'>${title}</div>
+		                </div>
+		                <div class="token_static_info">
+		                	<div class='token_main_text'>Description</div>
+		                	<div class='token_subtext'>${description}</div>
+		                </div>
+		                <div class="token_static_info">
+		                	<div class='token_main_text'>Auction Info</div>
+		                	<div class='token_subtext'>${isItNew ? 'Owner' : 'Current Bidder'}: ${isItNew ? e.target.sale.owner_id : e.target.sale.bids[0].bidder_id}</div>		                	
+		                	<div class='token_subtext'>Current Price: ${current_price}</div>
+		                	<div class='token_subtext'>Start time: ${startTime}</div>		                	
+		                	<div class='token_subtext'>End time: ${endTime}</div>
+		                </div>
+		                <div>
+		                	<div class='token_main_text'>Bid</div>
+		                	<input id="token_bid_price" type="number" placeholder="Enter your bid">
+		                	<button id="bid"> Submit </button>
+		                </div>
+		                <div>		                	
+		                	<button id="end"> End Auction </button>
+		                </div>
+		                <button id="close_modal">Close</button>
+	                </div>`;
+    bidButton = modal.querySelector('#bid');
+    bidButton.sale = e.target.sale;
+    bidButton.token = e.target.token;
+    bidButton.addEventListener('click', bid);
+    endButton = modal.querySelector('#end');
+    endButton.sale = e.target.sale;
+    endButton.token = e.target.token;
+    endButton.addEventListener('click', end_auction);
+    modal.querySelector("#close_modal").addEventListener("click", ()=>{
+        body.classList.remove('modal-open');
+        container.remove();
+    });
+}
+function createModal(modalId) {
+    let container = document.createElement("div");
+    container.classList.add('modal_bg');
+    let modal = document.createElement("div");
+    modal.classList.add("modal");
+    modal.id = modalId;
+    container.appendChild(modal);
+    return {
+        container,
+        modal
+    };
+}
+async function bid(e) {
+    if (!window.walletConnection.isSignedIn()) {
+        alert('Please Sign In!');
+        return;
+    }
+    if (window.accountId == e.target.sale.owner_id) {
+        alert('Cant bid on your own token!');
+        return;
+    }
+    let endTime = e.target.sale.end_time / 10 ** 6;
+    let currentTime = (new Date).getTime();
+    if (currentTime > endTime) {
+        alert('Auction has already ended, please end the auction.');
+        return;
+    }
+    let bid_amount = parseFloat(document.getElementById("token_bid_price").value);
+    if (!bid_amount) {
+        alert("Please fill the fields appropriately.");
+        return;
+    }
+    if (typeof bid_amount != "number") {
+        alert("Bid must be a number");
+        return;
+    }
+    bid_amount = (bid_amount * NEAR_IN_YOCTO).toLocaleString('fullwide', {
+        useGrouping: false
+    });
+    try {
+        await window.marketplace_contract.add_bid({
+            "nft_contract_id": "royalties.evin.testnet",
+            "token_id": e.target.token.token_id
+        }, "300000000000000", bid_amount);
+    } catch (e1) {
+        alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+        throw e1;
+    }
+}
+async function end_auction(e) {
+    let endTime = e.target.sale.end_time / 10 ** 6;
+    let currentTime = (new Date).getTime();
+    if (currentTime < endTime) {
+        alert(`Cannot end the auction now, please try again at ${new Date(endTime)}`);
+        return;
+    }
+    try {
+        // Ending auction, if there is a bid its transferred otherwise only the sale gets removed.
+        // which is why a revoke transaction is also added to remove the approval, this is so that when the
+        // auction ends with no bids, the token tab must enable to list it again.
+        await window.marketplace_contract.end_auction({
+            "nft_contract_id": "royalties.evin.testnet",
+            "token_id": e.target.token.token_id
+        }, "300000000000000");
+    } catch (e2) {
+        alert("Something went wrong! Maybe you need to sign out and back in? Check your browser console for more info.");
+        throw e2;
+    }
 }
 
 },{"./utils.js":"en4he","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"dXNgZ":[function(require,module,exports) {

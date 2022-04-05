@@ -2,7 +2,10 @@ export async function populateSales(){
 	let sales_content=document.getElementById('main_sale_container');
 
 	try{
-		let sales=await window.marketplace_contract.get_sales_by_nft_contract_id({'nft_contract_id':'royalties.evin.testnet','limit':40});
+		let all_sales=await window.marketplace_contract.get_sales_by_nft_contract_id({'nft_contract_id':'royalties.evin.testnet','limit':40});
+		
+		//Filtered out the ones that are auctions
+		let sales= all_sales.filter( sale=>!sale["is_auction"] )
 		let token_ids=sales.map(sale=>sale.token_id);
 
 		let tokens=[];
@@ -11,11 +14,8 @@ export async function populateSales(){
 		  tokens.push(token);
 		}
 
-		let container=createSalesDOM(sales, tokens)
-		if(!sales_content.isEqualNode(container)){
-		  sales_content.textContent="";
-		  sales_content.appendChild(container);
-		}
+		let container=createSalesDOM(sales, tokens);
+		sales_content.appendChild(container);
 
 	}
 	catch(e){
@@ -48,9 +48,9 @@ function createSaleFromObject(sale, token){
 	let saleDOM=document.createElement('div')
 	saleDOM.id="item_container";
 
-	let price_to_display=(sale.sale_conditions/(10**24)).toFixed(1);
+	let price_to_display=(sale.price/(10**24)).toFixed(1);
 
-	saleDOM.innerHTML=`<img src=${token.metadata.media} height='200px' class='item_image'>
+	saleDOM.innerHTML=`<img src=${token.metadata.media} height='230px' class='item_image'>
 						<div class='item_info'>
 							<div class='item_left'>
 								<div class='item_owner'>${sale.owner_id}</div>
@@ -62,7 +62,7 @@ function createSaleFromObject(sale, token){
 	let button=saleDOM.querySelector('button');
 	button.token_id=sale.token_id;
 	button.owner_id=sale.owner_id;
-	button.price=sale.sale_conditions;
+	button.price=sale.price;
 	button.addEventListener('click', buy);
 
 	return saleDOM;

@@ -43,7 +43,7 @@ function tokenFromObject(tokenObject){
 	return token;
 }
 
-function tokenModalOpen(e){
+async function tokenModalOpen(e){
 	let {container,modal}= createModal("token_info");
 	let body=document.body;
 	body.append(container);
@@ -65,16 +65,37 @@ function tokenModalOpen(e){
 		                	<div class='token_subtext'>${description}</div>
 		                </div>
 		                <div id="approval_section">
-		                	<div class='token_main_text'>List on Marketplace</div>
+		                	<div class='token_main_text'>List as sale</div>
 		                	<input id="token_sale_price" type="number" placeholder="Sale Price">
 		                	<button id="submit_for_sale"> Submit </button>
 		                </div>
+		                <div id="auction_section">
+		                	<div class='token_main_text'>List as auction</div>
+		                	<form id='auction_form'>
+			                	<input id="token_auction_price" type="number" placeholder="Starting Price" step=0.01 required><br>
+			                	<label class="token_subtext">Start Time:</label>
+			                	<input id="token_auction_start_time" type="datetime-local" required><br>
+			                	<label class="token_subtext">End Time:</label>
+								<input id="token_auction_end_time" type="datetime-local" required>
+								<button id="submit_for_auction" type="submit">Submit</button>
+							</form>
+						</div>
 		                <button id="close_modal">Close</button>
 	                </div>`
 
+	/*
 	if (e.target.token.approved_account_ids["auction_market.evin.testnet"]!=undefined){ //Change address here, or fix
 		modal.querySelector("#approval_section").style.display="none"
+		modal.querySelector("#auction_section").style.display="none"
 	}
+	*/
+
+	if (await hasOwnerListed(e.target.token)){
+		console.log('yes')
+		modal.querySelector("#approval_section").style.display="none";
+		modal.querySelector("#auction_section").style.display="none";
+	}
+	
 
 	modal.querySelector("#submit_for_sale").addEventListener("click", async(e)=>{
 
@@ -100,12 +121,13 @@ function tokenModalOpen(e){
 			return;
 		}
 
-		const sale_conditions=(sale_price*NEAR_IN_YOCTO).toLocaleString('fullwide', {useGrouping:false});
+		const price=(sale_price*NEAR_IN_YOCTO).toLocaleString('fullwide', {useGrouping:false});
+		const is_auction=false;
 
 		try {
 			await window.nft_contract.nft_approve({"token_id": tokenId,
 			                                "account_id":"auction_market.evin.testnet",   //Using the contract name explicitly
-			                                "msg":JSON.stringify({sale_conditions})},
+			                                "msg":JSON.stringify({price,is_auction})},
 			                              GAS_FEE,
 			                              (NEAR_IN_YOCTO/10).toLocaleString('fullwide', {useGrouping:false}) ) ;
 		} catch (e) {
@@ -118,11 +140,89 @@ function tokenModalOpen(e){
 		}
 	})
 
+	let formElement=modal.querySelector("#auction_form")
+	formElement.token=e.target.token
+	formElement.addEventListener('submit', add_auction);
+
 	modal.querySelector("#close_modal").addEventListener("click", ()=>{
     	body.classList.remove('modal-open')
     	container.remove();
   	})
 
+}
+
+async function add_auction(e){
+	e.preventDefault()
+
+	let start_time=document.getElementById('token_auction_start_time').value;
+	start_time=(new Date(start_time)).getTime();
+
+	let end_time=document.getElementById('token_auction_end_time').value;
+	end_time=(new Date(end_time)).getTime();
+
+	// Validation
+	let current_time=(new Date()).getTime();
+	let limit = 0; 							//TODO: Add limit between start time and end time
+	if(start_time < current_time){
+		alert('Start time should be greater than current time')
+		return;
+	}
+	if(end_time < current_time){
+		alert('End time should be greater than current time')
+		return;	
+	}
+	if(end_time < start_time + limit){
+		alert('End time should be greater than start time')
+		return;
+	}
+
+	start_time*=10**6
+	start_time=start_time.toString()
+	end_time*=10**6
+	end_time=end_time.toString()
+
+	const sale_price=parseFloat(document.getElementById("token_auction_price").value);
+	const price=(sale_price*NEAR_IN_YOCTO).toLocaleString('fullwide', {useGrouping:false});
+
+	const is_auction=true;
+
+	try{
+		await window.nft_contract.nft_approve({"token_id": e.target.token.token_id,
+			                                "account_id":"auction_market.evin.testnet",   //Using the contract name explicitly
+			                                "msg":JSON.stringify({price,is_auction,start_time,end_time})},
+			                              GAS_FEE,
+			                              (NEAR_IN_YOCTO/10).toLocaleString('fullwide', {useGrouping:false}) );	
+	}	
+	catch(e){
+		alert(
+		  'Something went wrong! ' +
+		  'Maybe you need to sign out and back in? ' +
+		  'Check your browser console for more info.'
+		)
+		throw e
+	}
+}
+
+async function hasOwnerListed(token) {
+	try{
+		let result= await window.marketplace_contract.get_sales_by_owner_id({"account_id":window.accountId, "limit":1000})
+
+		//For now this search will do, gotta update to binary search if it gets popular with a lot of nfts for an account
+		for(let i=0;i<result.length;i++){
+			if (result[i].token_id==token.token_id){
+				return true;
+			}
+		}
+		return false;
+	}
+	catch(e){
+		alert(
+		  'Something went wrong! ' +
+		  'Maybe you need to sign out and back in? ' +
+		  'Check your browser console for more info.'
+		)
+		throw e
+	}
 }
 
 function createModal(modalId){

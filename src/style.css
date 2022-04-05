@@ -120,7 +120,7 @@ body.modal-open{
 .token_static_info{
 	display: flex;
 	flex-direction: column;
-	gap: 1px;
+	gap: 2px;
 }
 
 .token_main_text{
@@ -201,6 +201,8 @@ body.modal-open{
 	color:#964B00 ;
 }
 
+/* Buttons and their hover*/
+
 button{
 	font-family: 'Nunito';
 	background: white;
@@ -214,6 +216,7 @@ button:hover {
 		box-shadow: 1px 1px 1px black;
 }
 
+/*------*/
 #body_container{
 	margin: 40px 0px;
 	display: flex;
