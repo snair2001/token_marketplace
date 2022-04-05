@@ -4,18 +4,22 @@ const NEAR_IN_YOCTO=1000000000000000000000000;
 
 export function createDOM(){
 	// Creating container
+	let main_container=document.createElement("div")
+	provokeLogin(main_container, "Please Log In with your NEAR Wallet To participate in the auction");
+	
 	let container=document.createElement("div")
 	container.innerHTML=`<h1>My Auctions</h1>
 						<div id='auction_container'></div>`
 	container.id='auctions_tab';
-    provokeLogin(container, "Please Log In with your NEAR Wallet To participate in the auction");
+
+    main_container.append(container)
 	
 	// Stuff to do to change body
 	let content=document.getElementById("content");
 	let footer=document.getElementById("footer");
 
 	clearContentBody()
-	content.insertBefore(container, footer)
+	content.insertBefore(main_container, footer)
 
 	// populating
     populateItems()
@@ -69,7 +73,7 @@ function createSaleFromObject(sale, token){
 	saleDOM.id="item_container";
 
 	let current_price=(sale.price/(10**24)).toFixed(1);
-	let preface='Starting Price'
+	let preface='Start Price'
 	if (sale.bids.length!=0){
 		current_price=(sale.bids[0].price/(10**24)).toFixed(1);
 		preface='Latest Bid'
@@ -96,6 +100,12 @@ function createSaleFromObject(sale, token){
 }
 
 function openModal(e){
+	
+	if(!window.walletConnection.isSignedIn()){
+		alert('Please Sign In!')
+		return;
+	}
+
 	let {container,modal}= createModal("token_info");
 	let body=document.body;
 	body.append(container);

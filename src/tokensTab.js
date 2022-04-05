@@ -83,13 +83,6 @@ async function tokenModalOpen(e){
 		                <button id="close_modal">Close</button>
 	                </div>`
 
-	/*
-	if (e.target.token.approved_account_ids["auction_market.evin.testnet"]!=undefined){ //Change address here, or fix
-		modal.querySelector("#approval_section").style.display="none"
-		modal.querySelector("#auction_section").style.display="none"
-	}
-	*/
-
 	if (await hasOwnerListed(e.target.token)){
 		console.log('yes')
 		modal.querySelector("#approval_section").style.display="none";

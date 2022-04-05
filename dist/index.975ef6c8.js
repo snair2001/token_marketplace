@@ -14605,16 +14605,12 @@ async function tokenModalOpen(e) {
 		                <button id="close_modal">Close</button>
 	                </div>`;
     /*
-	if (e.target.token.approved_account_ids["auction_market.evin.testnet"]!=undefined){ //Change address here, or fix
-		modal.querySelector("#approval_section").style.display="none"
-		modal.querySelector("#auction_section").style.display="none"
+	if (await hasOwnerListed(e.target.token)){
+		console.log('yes')
+		modal.querySelector("#approval_section").style.display="none";
+		modal.querySelector("#auction_section").style.display="none";
 	}
-	*/ if (await hasOwnerListed(e.target.token)) {
-        console.log('yes');
-        modal.querySelector("#approval_section").style.display = "none";
-        modal.querySelector("#auction_section").style.display = "none";
-    }
-    modal.querySelector("#submit_for_sale").addEventListener("click", async (e)=>{
+	*/ modal.querySelector("#submit_for_sale").addEventListener("click", async (e)=>{
         const sale_price = parseFloat(document.getElementById("token_sale_price").value);
         if (!sale_price) {
             alert("Please fill the fields appropriately.");
@@ -14835,16 +14831,18 @@ var _utilsJs = require("./utils.js");
 const NEAR_IN_YOCTO = 1000000000000000000000000;
 function createDOM() {
     // Creating container
+    let main_container = document.createElement("div");
+    _utilsJs.provokeLogin(main_container, "Please Log In with your NEAR Wallet To participate in the auction");
     let container = document.createElement("div");
     container.innerHTML = `<h1>My Auctions</h1>
 						<div id='auction_container'></div>`;
     container.id = 'auctions_tab';
-    _utilsJs.provokeLogin(container, "Please Log In with your NEAR Wallet To participate in the auction");
+    main_container.append(container);
     // Stuff to do to change body
     let content = document.getElementById("content");
     let footer = document.getElementById("footer");
     _utilsJs.clearContentBody();
-    content.insertBefore(container, footer);
+    content.insertBefore(main_container, footer);
     // populating
     populateItems();
 }
@@ -14886,7 +14884,7 @@ function createSaleFromObject(sale, token) {
     let saleDOM = document.createElement('div');
     saleDOM.id = "item_container";
     let current_price = (sale.price / 10 ** 24).toFixed(1);
-    let preface = 'Starting Price';
+    let preface = 'Start Price';
     if (sale.bids.length != 0) {
         current_price = (sale.bids[0].price / 10 ** 24).toFixed(1);
         preface = 'Latest Bid';
@@ -14909,6 +14907,10 @@ function createSaleFromObject(sale, token) {
     return saleDOM;
 }
 function openModal(e) {
+    if (!window.walletConnection.isSignedIn()) {
+        alert('Please Sign In!');
+        return;
+    }
     let { container , modal  } = createModal("token_info");
     let body = document.body;
     body.append(container);
