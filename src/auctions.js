@@ -23,4 +23,15 @@ export async function populateItems(){
 	let container=document.getElementById('auction_container');
 	container.id='items';
 
+	try{
+		// let sales=await window.marketplace_contract.get_auctions({})
+	}
+	catch(e){
+		alert(
+		  'Something went wrong! ' +
+		  'Maybe you need to sign out and back in? ' +
+		  'Check your browser console for more info.'
+		)
+		throw e
+	}
 }

@@ -21,7 +21,7 @@ async function tokensDOM(){
 	let container=document.createElement('div');
 	container.id="items"
 	//Shows a maximum of 15 tokens. Note this
-	let result= await window.nft_contract.nft_tokens_for_owner({account_id:window.accountId, limit:15});
+	let result= await window.nft_contract.nft_tokens_for_owner({account_id:window.accountId, limit:20});
 
 	for (let i=0; i<result.length; i++)
 		container.append(tokenFromObject(result[i]));
@@ -72,7 +72,7 @@ function tokenModalOpen(e){
 		                <button id="close_modal">Close</button>
 	                </div>`
 
-	if (e.target.token.approved_account_ids["market.evin.testnet"]!=undefined){
+	if (e.target.token.approved_account_ids["auction_market.evin.testnet"]!=undefined){ //Change address here, or fix
 		modal.querySelector("#approval_section").style.display="none"
 	}
 
@@ -104,7 +104,7 @@ function tokenModalOpen(e){
 
 		try {
 			await window.nft_contract.nft_approve({"token_id": tokenId,
-			                                "account_id":"market.evin.testnet",   //Using the contract name explicitly
+			                                "account_id":"auction_market.evin.testnet",   //Using the contract name explicitly
 			                                "msg":JSON.stringify({sale_conditions})},
 			                              GAS_FEE,
 			                              (NEAR_IN_YOCTO/10).toLocaleString('fullwide', {useGrouping:false}) ) ;

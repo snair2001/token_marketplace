@@ -828,7 +828,7 @@ async function initContract() {
         ]
     });
     //Just to check working on another contract from the same frontend
-    window.marketplace_contract = await new _nearApiJs.Contract(window.walletConnection.account(), 'market.evin.testnet', {
+    window.marketplace_contract = await new _nearApiJs.Contract(window.walletConnection.account(), nearConfig.marketplaceContract, {
         viewMethods: [
             'get_supply_sales',
             'get_supply_by_owner_id',
@@ -14458,7 +14458,7 @@ const nft_contract = 'royalties.evin.testnet' //'dev-1646240406152-7142226046197
 ;
 //This is the latest contract with approvals
 //royalties.evin.testnet will be used further since it has all the implementations.
-const marketplace_contract = 'market.evin.testnet' //No changes done to the main one
+const marketplace_contract = 'auction_market.evin.testnet' //No changes done to the main one
 ;
 function getConfig(env) {
     switch(env){
@@ -14550,7 +14550,7 @@ async function tokensDOM() {
     //Shows a maximum of 15 tokens. Note this
     let result = await window.nft_contract.nft_tokens_for_owner({
         account_id: window.accountId,
-        limit: 15
+        limit: 20
     });
     for(let i = 0; i < result.length; i++)container.append(tokenFromObject(result[i]));
     return container;
@@ -14590,7 +14590,7 @@ function tokenModalOpen(e) {
 		                </div>
 		                <button id="close_modal">Close</button>
 	                </div>`;
-    if (e.target.token.approved_account_ids["market.evin.testnet"] != undefined) modal.querySelector("#approval_section").style.display = "none";
+    if (e.target.token.approved_account_ids["auction_market.evin.testnet"] != undefined) modal.querySelector("#approval_section").style.display = "none";
     modal.querySelector("#submit_for_sale").addEventListener("click", async (e)=>{
         const sale_price = parseFloat(document.getElementById("token_sale_price").value);
         if (!sale_price) {
@@ -14618,7 +14618,7 @@ function tokenModalOpen(e) {
         try {
             await window.nft_contract.nft_approve({
                 "token_id": tokenId,
-                "account_id": "market.evin.testnet",
+                "account_id": "auction_market.evin.testnet",
                 "msg": JSON.stringify({
                     sale_conditions
                 })
