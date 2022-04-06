@@ -155,12 +155,12 @@ function openModal(e){
 		                <button id="close_modal">Close</button>
 	                </div>`
 
-	bidButton=modal.querySelector('#bid');
+	let bidButton=modal.querySelector('#bid');
 	bidButton.sale=e.target.sale
 	bidButton.token=e.target.token
 	bidButton.addEventListener('click', bid);
 
-	endButton=modal.querySelector('#end');
+	let endButton=modal.querySelector('#end');
 	endButton.sale=e.target.sale;
 	endButton.token=e.target.token
 	endButton.addEventListener('click', end_auction);
