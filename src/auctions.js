@@ -158,6 +158,7 @@ function openModal(e){
 	let bidButton=modal.querySelector('#bid');
 	bidButton.sale=e.target.sale
 	bidButton.token=e.target.token
+	bidButton.currentPrice=current_price
 	bidButton.addEventListener('click', bid);
 
 	let endButton=modal.querySelector('#end');
@@ -195,13 +196,20 @@ async function bid(e){
 		return;
 	}
 
+	let startTime=(e.target.sale.start_time/(10**6))
 	let endTime=(e.target.sale.end_time/(10**6))
 	let currentTime=(new Date).getTime()
+
+	if(currentTime < startTime){
+		alert(`Auction has not begun yet, please try again at ${new Date(startTime)}`)
+		return;
+	}
 
 	if(currentTime > endTime){
 		alert('Auction has already ended, please end the auction.')
 		return;
 	}
+
 
 	let bid_amount=parseFloat(document.getElementById("token_bid_price").value);
 	
@@ -212,6 +220,11 @@ async function bid(e){
 
 	if(typeof(bid_amount)!="number"){
 		alert("Bid must be a number")
+		return;
+	}
+
+	if (bid_amount < e.target.currentPrice){
+		alert(`Please bid higher than ${e.target.currentPrice}`);
 		return;
 	}
 
