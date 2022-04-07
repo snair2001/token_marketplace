@@ -67,7 +67,7 @@ function welcome(){
 
 	container.innerHTML=	`<div id='welcome_container'>
 								<div id='welcome'>Welcome to our marketplace to buy, sell and discover NFTs!</div>
-								<div id='subtext'>It is one of the largest NFT marketplaces around!</div>
+								<div id='subtext'>It is one of the latest NFT marketplaces around!</div>
 							</div>`
 
 	const item=document.createElement('div');
