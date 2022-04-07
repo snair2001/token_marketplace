@@ -224,7 +224,7 @@ async function bid(e){
 	}
 
 	if (bid_amount < e.target.currentPrice){
-		alert(`Please bid higher than ${e.target.currentPrice}`);
+		alert(`Please bid higher than ${e.target.currentPrice} NEAR`);
 		return;
 	}
 
