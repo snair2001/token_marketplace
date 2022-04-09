@@ -71,7 +71,7 @@ async function tokenModalOpen(e){
 		                </div>
 		                <div id="auction_section">
 		                	<div class='token_main_text'>List as auction</div>
-		                	<div class='token_subtext'>(Please make sure to approve the transaction before the desire start time)</div>
+		                	<div class='token_subtext'>(Please make sure to approve the transaction before the desired start time)</div>
 		                	<form id='auction_form'>
 			                	<input id="token_auction_price" type="number" placeholder="Starting Price" step=0.01 required min=0.01><br>
 			                	<label class="token_subtext">Start Time:</label>
