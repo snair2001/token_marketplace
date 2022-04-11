@@ -78,11 +78,15 @@ async function buy(e){
 		alert('Cant buy your own token!');
 		return;
 	}
+	
+	//Fixed the bn.js issue by converting number to string instead of exponential form.
+	let price=e.target.price.toLocaleString('fullwide', {useGrouping:false});
+
 	try{
 		await window.marketplace_contract.offer({"nft_contract_id":"royalties.evin.testnet", 
 		                                          "token_id":e.target.token_id},
 		                                          "300000000000000",
-		                                          e.target.price);
+		                                          price);
 	}
 	catch(e){
 		alert(
