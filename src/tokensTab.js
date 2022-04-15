@@ -104,13 +104,7 @@ async function tokenModalOpen(e){
 			return;
 		}
 
-		let minimum_balance= await window.marketplace_contract.storage_minimum_balance()
-		let current_storage= await window.marketplace_contract.storage_balance_of({"account_id":window.accountId})
-		let totalSales=await window.marketplace_contract.get_supply_by_owner_id({"account_id":window.accountId})
-
-
-		if(current_storage-minimum_balance*totalSales<=minimum_balance){
-			alert('Not enough storage. Please visit the Storage section to get storage.')
+		if(checkStorage()){
 			return;
 		}
 
@@ -147,6 +141,10 @@ async function tokenModalOpen(e){
 async function add_auction(e){
 	e.preventDefault()
 
+	if(checkStorage()){
+		return;
+	}
+		
 	let start_time=document.getElementById('token_auction_start_time').value;
 	start_time=(new Date(start_time)).getTime();
 
@@ -218,6 +216,31 @@ async function hasOwnerListed(token) {
 	}
 }
 
+async function checkStorage(){
+	try{
+		let minimum_balance= await window.marketplace_contract.storage_minimum_balance()
+		let current_storage= await window.marketplace_contract.storage_balance_of({"account_id":window.accountId})
+		let totalSales=await window.marketplace_contract.get_supply_by_owner_id({"account_id":window.accountId})
+
+
+		if(current_storage-minimum_balance*totalSales<=minimum_balance){
+			alert('Not enough storage. Please visit the Storage section to get storage.')
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	catch(e){
+		alert(
+		  'Something went wrong! ' +
+		  'Maybe you need to sign out and back in? ' +
+		  'Check your browser console for more info.'
+		)
+		throw e
+	}
+}
+
 function createModal(modalId){
   let container=document.createElement("div");
   container.classList.add('modal_bg')
@@ -229,3 +252,4 @@ function createModal(modalId){
   container.appendChild(modal);
   return {container,modal}
 }
+
