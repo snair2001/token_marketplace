@@ -20,7 +20,7 @@ export async function createDOM(){
 async function tokensDOM(){
 	let container=document.createElement('div');
 	container.id="items"
-	//Shows a maximum of 15 tokens. Note this
+	//Shows a maximum of 20 tokens. Note this
 	let result= await window.nft_contract.nft_tokens_for_owner({account_id:window.accountId, limit:20});
 
 	for (let i=0; i<result.length; i++)
@@ -54,6 +54,8 @@ async function tokenModalOpen(e){
 	let description=e.target.token.metadata.description
 	let tokenId=e.target.token.token_id
 
+	let hasOwnerListedValue=await hasOwnerListed(e.target.token);
+
 	modal.innerHTML=`<img src=${media} height="200px">
 					<div style="display:flex; flex-direction:column; gap:15px">
 	                	<div class="token_static_info">
@@ -81,12 +83,17 @@ async function tokenModalOpen(e){
 								<button id="submit_for_auction" type="submit">Submit</button>
 							</form>
 						</div>
+						<div id="remove_section" style="display:none;">
+							<div class='token_main_text'>Remove Sale/Auction</div>
+							<button id="remove_sale">Submit</button>
+						</div>
 		                <button id="close_modal">Close</button>
 	                </div>`
 
-	if (await hasOwnerListed(e.target.token)){
+	if (hasOwnerListedValue){
 		modal.querySelector("#approval_section").style.display="none";
 		modal.querySelector("#auction_section").style.display="none";
+		modal.querySelector("#remove_section").style.display="flex";
 	}
 	
 
@@ -130,6 +137,10 @@ async function tokenModalOpen(e){
 	let formElement=modal.querySelector("#auction_form")
 	formElement.token=e.target.token
 	formElement.addEventListener('submit', add_auction);
+
+	let removeButton=modal.querySelector("#remove_sale");
+	removeButton.token=e.target.token
+	removeButton.addEventListener('click', removeSale);
 
 	modal.querySelector("#close_modal").addEventListener("click", ()=>{
     	body.classList.remove('modal-open')
@@ -184,6 +195,23 @@ async function add_auction(e){
 			                              GAS_FEE,
 			                              (NEAR_IN_YOCTO/10).toLocaleString('fullwide', {useGrouping:false}) );	
 	}	
+	catch(e){
+		alert(
+		  'Something went wrong! ' +
+		  'Maybe you need to sign out and back in? ' +
+		  'Check your browser console for more info.'
+		)
+		throw e
+	}
+}
+
+async function removeSale(e){
+	try{
+		await window.marketplace_contract.remove_sale({"nft_contract_id": "royalties.evin.testnet", //Using account name explicitly
+														"token_id": e.target.token.token_id},
+														"200000000000000",
+														"1");
+	}
 	catch(e){
 		alert(
 		  'Something went wrong! ' +
