@@ -8,7 +8,7 @@ export function createDOM(){
 	provokeLogin(main_container, "Please Log In with your NEAR Wallet To participate in the auction");
 	
 	let container=document.createElement("div")
-	container.innerHTML=`<h1>My Auctions</h1>
+	container.innerHTML=`<h1>Auctions</h1>
 						<div id='auction_container'></div>`
 	container.id='auctions_tab';
 
