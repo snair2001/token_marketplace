@@ -3,7 +3,10 @@ import {clearContentBody, provokeLogin} from "./utils.js"
 const GAS_FEE= `100000000000000`
 const NEAR_IN_YOCTO=1000000000000000000000000;
 
-export async function createDOM(){
+export async function createDOM(e){
+
+	let contract = e.target.contract;
+
 	let content=document.getElementById("content");
 	let footer=document.getElementById("footer");
 
@@ -11,25 +14,26 @@ export async function createDOM(){
 
 	let container=document.createElement("div")
 	container.id="tokens_tab"
+	container.classList.add('page_style')
 	container.innerHTML=`<h1>Tokens</h1>`
-    container.append(await tokensDOM())
+    container.append(await tokensDOM(contract))
 
 	content.insertBefore(container, footer)
 }
 
-async function tokensDOM(){
+async function tokensDOM(contract){
 	let container=document.createElement('div');
 	container.id="items"
 	//Shows a maximum of 20 tokens. Note this
-	let result= await window.nft_contract.nft_tokens_for_owner({account_id:window.accountId, limit:20});
+	let result= await contract.nft_tokens_for_owner({account_id:window.accountId, limit:20});
 
 	for (let i=0; i<result.length; i++)
-		container.append(tokenFromObject(result[i]));
+		container.append(tokenFromObject(result[i], contract));
 
 	return container
 }
 
-function tokenFromObject(tokenObject){
+function tokenFromObject(tokenObject, contract){
 	let token=document.createElement('div')
 
 	token.innerHTML=`<img class='cursor' src=${tokenObject.metadata.media} height='200px' class='item_image'>
@@ -38,12 +42,16 @@ function tokenFromObject(tokenObject){
 	let img=token.querySelector("img")
 	
 	img.token=tokenObject
+	img.contract=contract
 	img.addEventListener('click', tokenModalOpen)
 
 	return token;
 }
 
 async function tokenModalOpen(e){
+
+	let contract = e.target.contract;
+
 	let {container,modal}= createModal("token_info");
 	let body=document.body;
 	body.append(container);
@@ -54,7 +62,7 @@ async function tokenModalOpen(e){
 	let description=e.target.token.metadata.description
 	let tokenId=e.target.token.token_id
 
-	let hasOwnerListedValue=await hasOwnerListed(e.target.token);
+	let hasOwnerListedValue=await hasOwnerListed(e.target.token, contract.contractId);
 
 	modal.innerHTML=`<img src=${media} height="200px">
 					<div style="display:flex; flex-direction:column; gap:15px">
@@ -83,7 +91,7 @@ async function tokenModalOpen(e){
 								<button id="submit_for_auction" type="submit">Submit</button>
 							</form>
 						</div>
-						<div id="remove_section" style="display:none;">
+						<div id="remove_section" style="display:none; gap:10px;">
 							<div class='token_main_text'>Remove Sale/Auction</div>
 							<button id="remove_sale">Submit</button>
 						</div>
@@ -100,7 +108,7 @@ async function tokenModalOpen(e){
 	modal.querySelector("#submit_for_sale").addEventListener("click", async(e)=>{
 
 	    const sale_price=parseFloat(document.getElementById("token_sale_price").value);
-
+	    console.log(window.marketplace_contract.accountId)
 		if (!sale_price){
 			alert("Please fill the fields appropriately.");
 			return;
@@ -111,16 +119,16 @@ async function tokenModalOpen(e){
 			return;
 		}
 
-		if(checkStorage()){
+		if(await checkStorage()){
 			return;
 		}
 
 		const price=(sale_price*NEAR_IN_YOCTO).toLocaleString('fullwide', {useGrouping:false});
 		const is_auction=false;
-
+		
 		try {
-			await window.nft_contract.nft_approve({"token_id": tokenId,
-			                                "account_id":"auction_market.evin.testnet",   //Using the contract name explicitly
+			await contract.nft_approve({"token_id": tokenId,
+			                                "account_id":window.marketplace_contract.contractId,   
 			                                "msg":JSON.stringify({price,is_auction})},
 			                              GAS_FEE,
 			                              (NEAR_IN_YOCTO/10).toLocaleString('fullwide', {useGrouping:false}) ) ;
@@ -136,10 +144,12 @@ async function tokenModalOpen(e){
 
 	let formElement=modal.querySelector("#auction_form")
 	formElement.token=e.target.token
+	formElement.contract=contract
 	formElement.addEventListener('submit', add_auction);
 
 	let removeButton=modal.querySelector("#remove_sale");
 	removeButton.token=e.target.token
+	removeButton.contract = contract;
 	removeButton.addEventListener('click', removeSale);
 
 	modal.querySelector("#close_modal").addEventListener("click", ()=>{
@@ -152,7 +162,9 @@ async function tokenModalOpen(e){
 async function add_auction(e){
 	e.preventDefault()
 
-	if(checkStorage()){
+	let contract = e.target.contract;
+
+	if(await checkStorage()){
 		return;
 	}
 		
@@ -189,11 +201,11 @@ async function add_auction(e){
 	const is_auction=true;
 
 	try{
-		await window.nft_contract.nft_approve({"token_id": e.target.token.token_id,
-			                                "account_id":"auction_market.evin.testnet",   //Using the contract name explicitly
-			                                "msg":JSON.stringify({price,is_auction,start_time,end_time})},
-			                              GAS_FEE,
-			                              (NEAR_IN_YOCTO/10).toLocaleString('fullwide', {useGrouping:false}) );	
+		await contract.nft_approve({"token_id": e.target.token.token_id,
+	                                "account_id":window.marketplace_contract.contractId,   
+	                                "msg":JSON.stringify({price,is_auction,start_time,end_time})},
+	                              GAS_FEE,
+	                              (NEAR_IN_YOCTO/10).toLocaleString('fullwide', {useGrouping:false}) );	
 	}	
 	catch(e){
 		alert(
@@ -206,8 +218,10 @@ async function add_auction(e){
 }
 
 async function removeSale(e){
+
+	let contract = e.target.contract;
 	try{
-		await window.marketplace_contract.remove_sale({"nft_contract_id": "royalties.evin.testnet", //Using account name explicitly
+		await window.marketplace_contract.remove_sale({"nft_contract_id": contract.contractId, 
 														"token_id": e.target.token.token_id},
 														"200000000000000",
 														"1");
@@ -222,9 +236,9 @@ async function removeSale(e){
 	}
 }
 
-async function hasOwnerListed(token) {
+async function hasOwnerListed(token, contractId) {
 	try{
-		let result= await window.marketplace_contract.get_sales_by_owner_id({"account_id":window.accountId, "limit":1000})
+		let result= await window.marketplace_contract.get_sales_by_nft_contract_id({"nft_contract_id":contractId, "limit":1000})
 
 		//For now this search will do, gotta update to binary search if it gets popular with a lot of nfts for an account
 		for(let i=0;i<result.length;i++){
@@ -281,3 +295,43 @@ function createModal(modalId){
   return {container,modal}
 }
 
+
+// Contract management 
+
+export async function addContract(contractId){
+	try{
+		await window.marketplace_contract.add_contract_for_account(	{nft_contract_id: contractId},
+																		"200000000000000",
+																		"1000000000000000000000");
+	}
+	catch(e){
+		alert(
+		  'Something went wrong! ' +
+		  'Maybe you need to sign out and back in? ' +
+		  'Check your browser console for more info.'
+		)
+		throw e
+	}
+}
+
+export async function removeContract(contractId) {
+	
+	if (contractId == window.nft_contract.contractId){
+		alert('Cannot remove this contract');
+		return;
+	}
+
+	try{
+		await window.marketplace_contract.remove_contract_for_account(	{nft_contract_id: contractId},
+																		"200000000000000",
+																		"1");
+	}
+	catch(e){
+		alert(
+		  'Something went wrong! ' +
+		  'Maybe you need to sign out and back in? ' +
+		  'Check your browser console for more info.'
+		)
+		throw e
+	}
+}

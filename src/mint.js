@@ -16,6 +16,7 @@ export function createDOM(){
 function mintDOM(){
 	let mint=document.createElement("div");
 	mint.id='mintDOM'
+	mint.classList.add("page_style")
 
 	mint.innerHTML=`<h1>Mint A Token!</h1>
 					<form id="mint-form">

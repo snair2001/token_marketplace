@@ -11,6 +11,7 @@ export async function createDOM(){
 
 	let container=document.createElement("div")
 	container.id="storage_tab"
+	container.classList.add('page_style')
 	container.innerHTML=`<h1>Storage Details</h1>`
     container.append(await storageDOM())
 

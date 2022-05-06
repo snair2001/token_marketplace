@@ -1,8 +1,8 @@
-const nft_contract = 'royalties.evin.testnet' //'dev-1646240406152-71422260461975' //change this line to 'process.env.nft_contract' to access the env variable from file,
+const nft_contract = 'dev-1651463021806-52564595903906' //'royalties.evin.testnet' //'dev-1646240406152-71422260461975'
 //This is the latest contract with approvals
 //royalties.evin.testnet will be used further since it has all the implementations.
 
-const marketplace_contract= 'auction_market.evin.testnet' //No changes done to the main one
+const marketplace_contract= 'dev-1651817325992-49412045689708' //'auction_market.evin.testnet' //No changes done to the main one
 
 function getConfig(env) {
   switch (env) {

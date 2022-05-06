@@ -20,8 +20,13 @@ export async function initContract() {
   
   //Just to check working on another contract from the same frontend
   window.marketplace_contract = await new Contract(window.walletConnection.account(), nearConfig.marketplaceContract, {
-    viewMethods: ['get_supply_sales', 'get_supply_by_owner_id', 'get_sales_by_owner_id', 'get_sales_by_nft_contract_id', 'get_supply_by_nft_contract_id','storage_minimum_balance','storage_balance_of'],
-    changeMethods: ['offer', 'add_bid', 'remove_sale', 'end_auction', 'storage_deposit', 'storage_withdraw'],
+    viewMethods: ['get_supply_sales', 'get_supply_by_owner_id', 'get_sales_by_owner_id', 'get_sales_by_nft_contract_id', 'get_supply_by_nft_contract_id','get_contract_ids', 
+                  'storage_minimum_balance','storage_balance_of',
+                  'get_contract_ids_for_account',
+                  'get_number_of_offers',
+                  'get_number_of_auctions'],
+    changeMethods: ['offer', 'add_bid', 'remove_sale', 'end_auction', 'storage_deposit', 'storage_withdraw',
+                    'add_contract_for_account', 'remove_contract_for_account'],
   })
   
 }

@@ -2,15 +2,21 @@ import {clearContentBody, provokeLogin} from "./utils.js"
 
 const NEAR_IN_YOCTO=1000000000000000000000000;
 
-export function createDOM(){
+export async function createDOM(e){
+
+	let contract = e.target.contract;
+
+	let contract_metadata = await contract.nft_metadata();
+
 	// Creating container
 	let main_container=document.createElement("div")
 	provokeLogin(main_container, "Please Log In with your NEAR Wallet To participate in the auction");
 	
 	let container=document.createElement("div")
-	container.innerHTML=`<h1>Auctions</h1>
+	container.innerHTML=`<h1>Auctions from ${contract_metadata.name}</h1>
 						<div id='auction_container'></div>`
 	container.id='auctions_tab';
+	container.classList.add('page_style')
 
     main_container.append(container)
 	
@@ -22,15 +28,15 @@ export function createDOM(){
 	content.insertBefore(main_container, footer)
 
 	// populating
-    populateItems()
+    populateItems(contract)
 }
 
-export async function populateItems(){
+export async function populateItems(contract){
 	let container=document.getElementById('auction_container');
 	container.id='items';
 
 	try{
-		let all_sales=await window.marketplace_contract.get_sales_by_nft_contract_id({'nft_contract_id':'royalties.evin.testnet','limit':40});
+		let all_sales=await window.marketplace_contract.get_sales_by_nft_contract_id({'nft_contract_id':contract.contractId,'limit':40});
 		
 		// Only the ones that are auction remain
 		let sales=all_sales.filter(sale=>sale["is_auction"])
@@ -38,7 +44,7 @@ export async function populateItems(){
 
 		let tokens=[];
 		for(let i=0;i<token_ids.length;i++){
-		  let token=await window.nft_contract.nft_token({'token_id': token_ids[i]})
+		  let token = await contract.nft_token({'token_id': token_ids[i]})
 		  tokens.push(token);
 		}
 
@@ -79,7 +85,7 @@ function createSaleFromObject(sale, token){
 		preface='Latest Bid'
 	}
 
-	saleDOM.innerHTML=`<img src=${token.metadata.media} height='230px' class='item_image'>
+	saleDOM.innerHTML=`<img src=${token.metadata.media} height='200px' class='item_image'>
 						<div class='item_info'>
 							<div class='item_left'>
 								<div class='item_owner'>${sale.owner_id}</div>
@@ -231,7 +237,7 @@ async function bid(e){
 	bid_amount=(bid_amount*NEAR_IN_YOCTO).toLocaleString('fullwide', {useGrouping:false});
 
 	try{
-		await window.marketplace_contract.add_bid({"nft_contract_id":"royalties.evin.testnet", 
+		await window.marketplace_contract.add_bid({"nft_contract_id": e.target.sale.nft_contract_id, 
 		                                          "token_id":e.target.token.token_id},
 		                                          "300000000000000",
 		                                          bid_amount);
@@ -260,7 +266,7 @@ async function end_auction(e){
 		// Ending auction, if there is a bid its transferred otherwise only the sale gets removed.
 		// which is why a revoke transaction is also added to remove the approval, this is so that when the
 		// auction ends with no bids, the token tab must enable to list it again.
-		await window.marketplace_contract.end_auction({"nft_contract_id":"royalties.evin.testnet", 
+		await window.marketplace_contract.end_auction({"nft_contract_id": e.target.sale.nft_contract_id, 
 		                                          "token_id":e.target.token.token_id},
 		                                          "300000000000000");
 	}
