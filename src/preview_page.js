@@ -139,7 +139,7 @@ async function findCollection(section) {
 
 	if(section=="sales"){
 		collections = await window.marketplace_contract.get_contract_ids();
-		for(i=0; i<collections.length; i++){
+		for(let i=0; i<collections.length; i++){
 			if (await window.marketplace_contract.get_number_of_offers({nft_contract_id: collections[i]})==0){
 				toDelete.push(collections[i]);
 			}
@@ -153,7 +153,7 @@ async function findCollection(section) {
 	}
 	else if(section=="auctions"){
 		collections = await window.marketplace_contract.get_contract_ids();
-		for(i=0; i<collections.length; i++){
+		for(let i=0; i<collections.length; i++){
 			if (await window.marketplace_contract.get_number_of_auctions({nft_contract_id: collections[i]})==0){
 				toDelete.push(collections[i]);
 			}
