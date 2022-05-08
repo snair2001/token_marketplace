@@ -96,6 +96,27 @@ body.modal-open{
 	width: 100%;
 }
 
+#royalty-title{
+	display: flex;
+	justify-content: space-between;
+}
+
+#add-royalty{
+	border: 1px solid #964B00;
+}
+
+#royalty-container{
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+#royalty-field{
+	width: 100%;
+	display: flex;
+	gap: 5px;
+}
+
 /* Preview page */
 
 #preview_page{

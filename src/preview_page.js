@@ -39,9 +39,9 @@ export function createDOM(e){
 				<button type="submit">Submit</button>
 			</form>`
 
-		let button = addContractBlock.querySelector('button');
+		let form = addContractBlock.querySelector('form');
 		let input = addContractBlock.querySelector('input');
-		button.addEventListener("click", (e)=> {
+		form.addEventListener("submit", (e)=> {
 			e.preventDefault();
 			tokens.addContract(input.value)
 		});
