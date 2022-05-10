@@ -12,8 +12,11 @@ export async function populateSales(sales_container, contract){
 		  let token=await contract.nft_token({'token_id': token_ids[i]})
 		  tokens.push(token);
 		}
-
-		let container=createSalesDOM(sales, tokens);
+		
+		const contract_metadata = await contract.nft_metadata();
+		const base_uri = contract_metadata.base_uri;
+		
+		let container=createSalesDOM(sales, tokens, base_uri);
 		sales_container.appendChild(container);
 
 	}
@@ -27,7 +30,7 @@ export async function populateSales(sales_container, contract){
 	}    
 }
 
-function createSalesDOM(sales, tokens){
+function createSalesDOM(sales, tokens, base_uri){
 	let container=document.createElement('div')
 	container.id="items"
 
@@ -37,19 +40,27 @@ function createSalesDOM(sales, tokens){
 	}
 
 	for(let i=0;i<sales.length;i+=1){
-		container.appendChild(createSaleFromObject(sales[i], tokens[i]))
+		container.appendChild(createSaleFromObject(sales[i], tokens[i], base_uri))
 	}
 
 	return container;
 }
 
-function createSaleFromObject(sale, token){
+function createSaleFromObject(sale, token, base_uri){
+
+	// Finding media 
+	let media = token.metadata.media;
+
+	if(base_uri){
+		media = base_uri + '/' + token.metadata.media;
+	}
+
 	let saleDOM=document.createElement('div')
 	saleDOM.id="item_container";
 
 	let price_to_display=(sale.price/(10**24)).toFixed(1);
 
-	saleDOM.innerHTML=`<img src=${token.metadata.media} height='200px' class='item_image'>
+	saleDOM.innerHTML=`<img src=${media} height='200px' class='item_image'>
 						<div class='item_info'>
 							<div class='item_left'>
 								<div class='item_owner'>${sale.owner_id}</div>

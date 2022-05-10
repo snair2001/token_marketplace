@@ -112,21 +112,19 @@ async function createCollectionDOM(requiredFunction, collection) {
 								</div>
 								<span class="close cursor" >x</span>`
 
-		// Defining it later cos I faced a problem with using svgs
-		let img = container.querySelector('img')
-		img.src= metadata.icon
-
 		let close_button = container.querySelector(".close");
 		close_button.contract_id = collection;
 		close_button.addEventListener("click", ()=>{ tokens.removeContract(collection) });
 	}
 	else{
-		container.innerHTML=`<img class='cursor' src=${metadata.icon} height='200px' class='item_image'>
+		container.innerHTML=`<img class='cursor' height='200px' class='item_image'>
 							<div class='contract_name'>${metadata.name}</div>`
 	}
 
-	let img=container.querySelector("img")
-	
+	// Defining it later cos I faced a problem with using svgs
+	let img = container.querySelector('img')
+	img.src= metadata.icon
+
 	img.contract = contract;
 	img.addEventListener('click', requiredFunction);
 

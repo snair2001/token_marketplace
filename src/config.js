@@ -1,4 +1,4 @@
-const nft_contract = 'dev-1651463021806-52564595903906' //'royalties.evin.testnet' //'dev-1646240406152-71422260461975'
+const nft_contract = 'dev-1652185815615-38783641891685' //'royalties.evin.testnet' //'dev-1646240406152-71422260461975'
 //This is the latest contract with approvals
 //royalties.evin.testnet will be used further since it has all the implementations.
 

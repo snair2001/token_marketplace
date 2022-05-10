@@ -28,10 +28,10 @@ export async function createDOM(e){
 	content.insertBefore(main_container, footer)
 
 	// populating
-    populateItems(contract)
+    populateItems(contract, contract_metadata)
 }
 
-export async function populateItems(contract){
+export async function populateItems(contract, metadata){
 	let container=document.getElementById('auction_container');
 	container.id='items';
 
@@ -48,7 +48,8 @@ export async function populateItems(contract){
 		  tokens.push(token);
 		}
 
-		createSalesDOM(sales, tokens, container)
+		const base_uri = metadata.base_uri;
+		createSalesDOM(sales, tokens, container, base_uri)
 	}
 	catch(e){
 		alert(
@@ -60,7 +61,7 @@ export async function populateItems(contract){
 	}
 }
 
-function createSalesDOM(sales, tokens, container){
+function createSalesDOM(sales, tokens, container, base_uri){
 
 	if (sales.length==0){
 		container.textContent="No auctions found!"
@@ -68,13 +69,22 @@ function createSalesDOM(sales, tokens, container){
 	}
 
 	for(let i=0;i<sales.length;i+=1){
-		container.appendChild(createSaleFromObject(sales[i], tokens[i]))
+		container.appendChild(createSaleFromObject(sales[i], tokens[i], base_uri))
 	}
 
 	return;
 }
 
-function createSaleFromObject(sale, token){
+function createSaleFromObject(sale, token, base_uri){
+
+	// Finding media 
+	let media = token.metadata.media;
+
+	if(base_uri){
+		media = base_uri + '/' + token.metadata.media;
+	}
+
+	// Token container
 	let saleDOM=document.createElement('div')
 	saleDOM.id="item_container";
 
@@ -85,7 +95,7 @@ function createSaleFromObject(sale, token){
 		preface='Latest Bid'
 	}
 
-	saleDOM.innerHTML=`<img src=${token.metadata.media} height='200px' class='item_image'>
+	saleDOM.innerHTML=`<img src=${media} height='200px' class='item_image'>
 						<div class='item_info'>
 							<div class='item_left'>
 								<div class='item_owner'>${sale.owner_id}</div>
@@ -100,6 +110,7 @@ function createSaleFromObject(sale, token){
 	let button=saleDOM.querySelector('#details');
 	button.sale=sale
 	button.token=token
+	button.media=media
 	button.addEventListener('click', openModal);
 
 	return saleDOM;
@@ -117,7 +128,7 @@ function openModal(e){
 	body.append(container);
 	body.classList.add('modal-open');
 
-	let media=e.target.token.metadata.media
+	let media=e.target.media
 	let title=e.target.token.metadata.title
 	let description=e.target.token.metadata.description
 	let tokenId=e.target.token.token_id

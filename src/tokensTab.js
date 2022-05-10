@@ -27,22 +27,38 @@ async function tokensDOM(contract){
 	//Shows a maximum of 20 tokens. Note this
 	let result= await contract.nft_tokens_for_owner({account_id:window.accountId, limit:20});
 
-	for (let i=0; i<result.length; i++)
-		container.append(tokenFromObject(result[i], contract));
+	const contract_metadata = await contract.nft_metadata();
+	const base_uri = contract_metadata.base_uri;
 
+	if(result.length == 0){
+		container.textContent = "No tokens found";
+	}
+	else{
+		for (let i=0; i<result.length; i++)
+			container.append(tokenFromObject(result[i], contract, base_uri));
+	}
+	
 	return container
 }
 
-function tokenFromObject(tokenObject, contract){
+function tokenFromObject(tokenObject, contract, base_uri){
 	let token=document.createElement('div')
 
-	token.innerHTML=`<img class='cursor' src=${tokenObject.metadata.media} height='200px' class='item_image'>
+	// Finding media 
+	let media = tokenObject.metadata.media;
+
+	if(base_uri){
+		media = base_uri + '/' + tokenObject.metadata.media;
+	}
+
+	token.innerHTML=`<img class='cursor' src=${media} height='200px' class='item_image'>
 					<div class='item_owner'>${tokenObject.metadata.title}</div>`
 
 	let img=token.querySelector("img")
 	
 	img.token=tokenObject
 	img.contract=contract
+	img.media = media
 	img.addEventListener('click', tokenModalOpen)
 
 	return token;
@@ -57,7 +73,7 @@ async function tokenModalOpen(e){
 	body.append(container);
 	body.classList.add('modal-open');
 
-	let media=e.target.token.metadata.media
+	let media=e.target.media
 	let title=e.target.token.metadata.title
 	let description=e.target.token.metadata.description
 	let tokenId=e.target.token.token_id

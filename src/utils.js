@@ -66,3 +66,17 @@ export function provokeLogin(container, msg){
     container.prepend(warning_message);
   }
 }
+
+export function createModal(width, height, modalId){
+  let container=document.createElement("div");
+  container.classList.add('modal_bg')
+
+  let modal=document.createElement("div")
+  modal.classList.add("modal");
+  modal.id=modalId;
+  modal.style.height=height;
+  modal.style.width=width;
+
+  container.appendChild(modal);
+  return {container,modal}
+}
