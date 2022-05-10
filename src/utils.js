@@ -55,6 +55,22 @@ export async function checkAccount(accountId){
   return true;
 }
 
+export async function checkStandard(accountId){
+  const near = await connect(Object.assign({ deps: {} }, nearConfig));
+  const contract = await new Contract(window.walletConnection.account(), accountId, {
+    viewMethods : ['nft_metadata'],
+  });
+
+  try{
+    const metadata = await contract.nft_metadata();
+  }
+  catch(e){
+    return false;
+  }
+  
+  return true;
+}
+
 export function clearContentBody(){
   let content=document.getElementById("content");
 

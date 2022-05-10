@@ -1,4 +1,4 @@
-import {clearContentBody, provokeLogin, checkAccount} from "./utils.js"
+import {clearContentBody, provokeLogin, checkAccount, checkStandard} from "./utils.js"
 
 const GAS_FEE= `100000000000000`
 const NEAR_IN_YOCTO=1000000000000000000000000;
@@ -320,6 +320,12 @@ export async function addContract(contractId){
 	if(!validAccount){
 		alert('Not valid account');
 		return;
+	}
+
+	let standardContract = await checkStandard(contractId);
+	if(!standardContract){
+		alert('Not an nft contract OR doesn\'t follow the nft standard NEP171');
+		return;	
 	}
 	
 	try{
