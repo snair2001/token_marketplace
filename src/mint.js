@@ -1,4 +1,4 @@
-import {clearContentBody, provokeLogin, createModal} from "./utils.js"
+import {clearContentBody, provokeLogin, createModal, checkAccount} from "./utils.js"
 import { create, globSource } from 'ipfs-http-client'
 
 export function createDOM(){
@@ -100,7 +100,7 @@ async function mintListener(array){
 		percentage : parseInt(object["percentage"].value) * 100
 	}));
 
-	if (!validateRoyalties(array)){
+	if (!(await validateRoyalties(array)) ){
 		return;
 	}
 
@@ -175,14 +175,23 @@ async function ipfsUpload(buffer){
     return ipfsHash.path;
 }
 
-function validateRoyalties(array) {
+async function validateRoyalties(array) {
+	
+	let accounts = array.map(object=>object.account)
+	for(let i=0; i<accounts.length; i++){
+		let validAccount = await checkAccount(accounts[i]);
+		if(!validAccount){
+			alert(`Account no. ${i+1} is not a valid account id`);
+			return false;
+		}
+	}
+
 	if (array.length > 6){
 		alert("No more than 6 royalty accounts.");
 		return false;
 	}
 
 	let royalty_sum = array.reduce((previous, current)=> previous + current.percentage, 0)
-
 	if(royalty_sum > 5000){
 		alert("Cannot have royalty more than 50%");
 		return false

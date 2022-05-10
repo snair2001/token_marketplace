@@ -1,4 +1,4 @@
-import {clearContentBody, provokeLogin} from "./utils.js"
+import {clearContentBody, provokeLogin, checkAccount} from "./utils.js"
 
 const GAS_FEE= `100000000000000`
 const NEAR_IN_YOCTO=1000000000000000000000000;
@@ -37,7 +37,7 @@ async function tokensDOM(contract){
 		for (let i=0; i<result.length; i++)
 			container.append(tokenFromObject(result[i], contract, base_uri));
 	}
-	
+
 	return container
 }
 
@@ -315,6 +315,13 @@ function createModal(modalId){
 // Contract management 
 
 export async function addContract(contractId){
+
+	let validAccount = await checkAccount(contractId);
+	if(!validAccount){
+		alert('Not valid account');
+		return;
+	}
+	
 	try{
 		await window.marketplace_contract.add_contract_for_account(	{nft_contract_id: contractId},
 																		"200000000000000",

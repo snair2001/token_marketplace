@@ -41,6 +41,20 @@ export function login() {
   window.walletConnection.requestSignIn(nearConfig.nftContract)
 }
 
+export async function checkAccount(accountId){
+  const near = await connect(Object.assign({ deps: {} }, nearConfig));
+  account = await near.account(accountId);
+
+  try{
+    const response = await account.state();
+  }
+  catch{
+    return false;
+  }
+  
+  return true;
+}
+
 export function clearContentBody(){
   let content=document.getElementById("content");
 
