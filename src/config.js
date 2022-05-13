@@ -2,7 +2,7 @@ const nft_contract = 'dev-1652185815615-38783641891685' //'royalties.evin.testne
 //This is the latest contract with approvals
 //royalties.evin.testnet will be used further since it has all the implementations.
 
-const marketplace_contract= 'dev-1651817325992-49412045689708' //'auction_market.evin.testnet' //No changes done to the main one
+const marketplace_contract= 'dev-1652450363200-32566891032927' //'dev-1651817325992-49412045689708' //'auction_market.evin.testnet' 
 
 function getConfig(env) {
   switch (env) {

@@ -88,10 +88,10 @@ function createSaleFromObject(sale, token, base_uri){
 	let saleDOM=document.createElement('div')
 	saleDOM.id="item_container";
 
-	let current_price=(sale.price/(10**24)).toFixed(1);
+	let current_price=(sale.price/(10**24)).toFixed(2);
 	let preface='Start Price'
 	if (sale.bids.length!=0){
-		current_price=(sale.bids[0].price/(10**24)).toFixed(1);
+		current_price=(sale.bids[0].price/(10**24)).toFixed(2);
 		preface='Latest Bid'
 	}
 
@@ -135,7 +135,7 @@ function openModal(e){
 
 	let isItNew=(e.target.sale.bids.length==0);
 
-	let current_price= isItNew ? (e.target.sale.price/(10**24)).toFixed(1) : (e.target.sale.bids[0].price/(10**24)).toFixed(1);
+	let current_price= isItNew ? (e.target.sale.price/(10**24)).toFixed(2) : (e.target.sale.bids[0].price/(10**24)).toFixed(2);
 
 	let startTime=(e.target.sale.start_time/(10**6))
 	startTime=new Date(startTime);
