@@ -142,11 +142,9 @@ async function findCollection(section) {
 				toDelete.push(collections[i]);
 			}
 		}
-		let j=0
 		while(toDelete.length>0){
-			collections = collections.filter(x => x!=toDelete[j]);
+			collections = collections.filter(x => x!=toDelete[0]);
 			toDelete.shift()
-			j+=1;
 		}
 	}
 	else if(section=="auctions"){
@@ -156,11 +154,9 @@ async function findCollection(section) {
 				toDelete.push(collections[i]);
 			}
 		}
-		let j=0
 		while(toDelete.length>0){
-			collections = collections.filter(x => x!=toDelete[j]);
+			collections = collections.filter(x => x!=toDelete[0]);
 			toDelete.shift()
-			j+=1;
 		}
 		
 	}
