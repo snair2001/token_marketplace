@@ -1,6 +1,8 @@
 import {clearContentBody, provokeLogin} from "./utils.js"
 
-const NEAR_IN_YOCTO=1000000000000000000000000;
+const EXCEPTION = 300000000;
+const NEAR_IN_YOCTO = 1000000000000000000000000;
+const MIN_BID_INCREMENT = 0.01;
 
 export async function createDOM(e){
 
@@ -172,8 +174,10 @@ function openModal(e){
 		                </div>
 		                <div>
 		                	<div class='token_main_text'>Bid</div>
-		                	<input id="token_bid_price" type="number" placeholder="Enter your bid">
-		                	<button id="bid"> Submit </button>
+		                	<form>
+		                		<input id="token_bid_price" type="number" placeholder="Enter your bid" min="0.01" step="0.01" required>
+		                		<button type="submit"> Submit </button>
+		                	</form>
 		                </div>
 		                <div>		                	
 		                	<button id="end"> End Auction </button>
@@ -181,11 +185,14 @@ function openModal(e){
 		                <button id="close_modal">Close</button>
 	                </div>`
 
-	let bidButton=modal.querySelector('#bid');
-	bidButton.sale=e.target.sale
-	bidButton.token=e.target.token
-	bidButton.currentPrice=current_price
-	bidButton.addEventListener('click', bid);
+	let form=modal.querySelector('form');
+	form.sale=e.target.sale
+	form.token=e.target.token
+	form.currentPrice=current_price
+	form.addEventListener('submit', (e)=>{
+		e.preventDefault()
+		bid(e)
+	});
 
 	let endButton=modal.querySelector('#end');
 	endButton.sale=e.target.sale;
@@ -238,23 +245,18 @@ async function bid(e){
 
 
 	let bid_amount=parseFloat(document.getElementById("token_bid_price").value);
-	
-	if (!bid_amount){
-		alert("Please fill the fields appropriately.");
+
+	let min_amount = parseFloat(e.target.currentPrice) + MIN_BID_INCREMENT	
+
+	if (bid_amount < min_amount){
+		alert(`Please bid higher than ${min_amount} NEAR`);
 		return;
 	}
 
-	if(typeof(bid_amount)!="number"){
-		alert("Bid must be a number")
-		return;
-	}
+	// EXCEPTION amount arises from limits of using toLocaleString which can only render accurately till 10**15. 
+	bid_amount=(bid_amount*NEAR_IN_YOCTO + EXCEPTION).toLocaleString('fullwide', {useGrouping:false});
 
-	if (bid_amount < e.target.currentPrice){
-		alert(`Please bid higher than ${e.target.currentPrice} NEAR`);
-		return;
-	}
-
-	bid_amount=(bid_amount*NEAR_IN_YOCTO).toLocaleString('fullwide', {useGrouping:false});
+	console.log(bid_amount)
 
 	try{
 		await window.marketplace_contract.add_bid({"nft_contract_id": e.target.sale.nft_contract_id, 
