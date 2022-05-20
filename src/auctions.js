@@ -28,13 +28,11 @@ export async function createDOM(e){
 	content.insertBefore(main_container, footer)
 
 	// populating
-    populateItems(contract, contract_metadata)
+	let auction_content = document.getElementById('auction_container');
+    populateItems(auction_content, contract, contract_metadata)
 }
 
-export async function populateItems(contract, metadata){
-	let container=document.getElementById('auction_container');
-	container.id='items';
-
+export async function populateItems(container, contract, metadata){
 	try{
 		let all_sales=await window.marketplace_contract.get_sales_by_nft_contract_id({'nft_contract_id':contract.contractId,'limit':40});
 		
@@ -62,6 +60,8 @@ export async function populateItems(contract, metadata){
 }
 
 function createSalesDOM(sales, tokens, container, base_uri){
+	container.id='items';
+	container.classList.add('tokens');
 
 	if (sales.length==0){
 		container.textContent="No auctions found!"
@@ -86,7 +86,8 @@ function createSaleFromObject(sale, token, base_uri){
 
 	// Token container
 	let saleDOM=document.createElement('div')
-	saleDOM.id="item_container";
+	saleDOM.id="tokenContainer";
+	saleDOM.classList.add('auction_tab_items_bg')
 
 	let current_price=(sale.price/(10**24)).toFixed(2);
 	let preface='Start Price'
@@ -95,7 +96,8 @@ function createSaleFromObject(sale, token, base_uri){
 		preface='Latest Bid'
 	}
 
-	saleDOM.innerHTML=`<img src=${media} height='200px' class='item_image'>
+	saleDOM.innerHTML=`<img class ="loading" src="imgs/img_loading.gif">
+						<img src=${media} class="token_image hidden" alt='NFT'>
 						<div class='item_info'>
 							<div class='item_left'>
 								<div class='item_owner'>${sale.owner_id}</div>
@@ -106,6 +108,13 @@ function createSaleFromObject(sale, token, base_uri){
 								<button id="details">Details</button>
 							</div>
 						</div>`;
+
+	let [loading_img, img] = saleDOM.querySelectorAll("img")
+
+	img.addEventListener('loadend', ()=>{
+		loading_img.style.display='none';
+		img.style.display = 'block'
+	});
 
 	let button=saleDOM.querySelector('#details');
 	button.sale=sale

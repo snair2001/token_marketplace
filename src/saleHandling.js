@@ -16,8 +16,7 @@ export async function populateSales(sales_container, contract){
 		const contract_metadata = await contract.nft_metadata();
 		const base_uri = contract_metadata.base_uri;
 		
-		let container=createSalesDOM(sales, tokens, base_uri);
-		sales_container.appendChild(container);
+		createSalesDOM(sales_container, sales, tokens, base_uri);
 
 	}
 	catch(e){
@@ -30,9 +29,9 @@ export async function populateSales(sales_container, contract){
 	}    
 }
 
-function createSalesDOM(sales, tokens, base_uri){
-	let container=document.createElement('div')
+function createSalesDOM(container, sales, tokens, base_uri){
 	container.id="items"
+	container.classList.add('tokens');
 
 	if (sales.length==0){
 		container.textContent="No sales found!"
@@ -42,8 +41,6 @@ function createSalesDOM(sales, tokens, base_uri){
 	for(let i=0;i<sales.length;i+=1){
 		container.appendChild(createSaleFromObject(sales[i], tokens[i], base_uri))
 	}
-
-	return container;
 }
 
 function createSaleFromObject(sale, token, base_uri){
@@ -56,11 +53,13 @@ function createSaleFromObject(sale, token, base_uri){
 	}
 
 	let saleDOM=document.createElement('div')
-	saleDOM.id="item_container";
-
+	saleDOM.id="tokenContainer";
+	saleDOM.classList.add('sale_tab_items_bg');
+	
 	let price_to_display=(sale.price/(10**24)).toFixed(1);
 
-	saleDOM.innerHTML=`<img src=${media} height='200px' class='item_image'>
+	saleDOM.innerHTML=`<img class ="loading" src="imgs/img_loading.gif">
+						<img src=${media} class="token_image hidden" alt='NFT'>
 						<div class='item_info'>
 							<div class='item_left'>
 								<div class='item_owner'>${sale.owner_id}</div>
@@ -68,6 +67,13 @@ function createSaleFromObject(sale, token, base_uri){
 							</div>
 							<button id="buy_sale">Buy!</button>
 						</div>`;
+
+	let [loading_img, img] = saleDOM.querySelectorAll("img")
+
+	img.addEventListener('loadend', ()=>{
+		loading_img.style.display='none';
+		img.style.display = 'block'
+	});
 
 	let button=saleDOM.querySelector('button');
 	button.token_id=sale.token_id;

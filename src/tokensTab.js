@@ -24,6 +24,8 @@ export async function createDOM(e){
 async function tokensDOM(contract){
 	let container=document.createElement('div');
 	container.id="items"
+	container.classList.add('tokens');
+	
 	//Shows a maximum of 20 tokens. Note this
 	let result= await contract.nft_tokens_for_owner({account_id:window.accountId, limit:20});
 
@@ -43,6 +45,8 @@ async function tokensDOM(contract){
 
 function tokenFromObject(tokenObject, contract, base_uri){
 	let token=document.createElement('div')
+	token.id = 'tokenContainer';
+	token.classList.add('token_tab_items_bg');
 
 	// Finding media 
 	let media = tokenObject.metadata.media;
@@ -51,11 +55,17 @@ function tokenFromObject(tokenObject, contract, base_uri){
 		media = base_uri + '/' + tokenObject.metadata.media;
 	}
 
-	token.innerHTML=`<img class='cursor' src=${media} height='200px' class='item_image'>
+	token.innerHTML=`<img class ="loading" src="imgs/img_loading.gif">
+					<img class="cursor hidden token_image " src=${media} alt='NFT' >
 					<div class='item_owner'>${tokenObject.metadata.title}</div>`
 
-	let img=token.querySelector("img")
-	
+	let [loading_img, img] = token.querySelectorAll("img")
+
+	img.addEventListener('loadend', ()=>{
+		loading_img.style.display='none';
+		img.style.display = 'block'
+	});
+
 	img.token=tokenObject
 	img.contract=contract
 	img.media = media
