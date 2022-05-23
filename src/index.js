@@ -2,6 +2,7 @@ import {populateSales} from "./saleHandling.js"
 import * as mint from "./mint.js"
 import * as storage from "./storage.js"
 import * as preview from "./preview_page.js"
+import * as terms from "./terms.js"
 
 import 'regenerator-runtime/runtime'
 import { initContract, login, logout, clearContentBody, provokeLogin} from './utils'
@@ -20,6 +21,7 @@ function createHeader(){
 							<div class="cursor" id="auction_redirect">Auctions</div>
 							<div class="cursor" id="token_redirect">My Tokens</div>
 							<div class="cursor" id="storage_redirect">Storage</div>
+							<div class="cursor" id="tc_redirect" >T&C</div>
 							<button id="login_button">${state ? 'Log Out' : 'Log In'}</button>
 						</div>`
 
@@ -45,6 +47,9 @@ function createHeader(){
 
 	let auctionButton=header.querySelector('#auction_redirect');
 	auctionButton.addEventListener('click', preview.createDOM);
+
+	let terms_and_conditions = header.querySelector('#tc_redirect');
+	terms_and_conditions.addEventListener('click', terms.createDOM);
 
 	let tokensTitle=header.querySelector('#token_redirect')
 	let storageTitle=header.querySelector('#storage_redirect')
