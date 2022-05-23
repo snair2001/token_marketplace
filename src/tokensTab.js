@@ -61,7 +61,7 @@ function tokenFromObject(tokenObject, contract, base_uri){
 
 	let [loading_img, img] = token.querySelectorAll("img")
 
-	img.addEventListener('loadend', ()=>{
+	img.addEventListener('load', ()=>{
 		loading_img.style.display='none';
 		img.style.display = 'block'
 	});

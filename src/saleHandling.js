@@ -70,7 +70,7 @@ function createSaleFromObject(sale, token, base_uri){
 
 	let [loading_img, img] = saleDOM.querySelectorAll("img")
 
-	img.addEventListener('loadend', ()=>{
+	img.addEventListener('load', ()=>{
 		loading_img.style.display='none';
 		img.style.display = 'block'
 	});
