@@ -118,6 +118,11 @@ function createSaleFromObject(sale, token, base_uri){
 		img.style.display = 'block'
 	});
 
+	img.addEventListener('error', ()=>{
+		loading_img.style.display='none';
+		img.src = "imgs/failed-to-load.svg"
+	});
+	
 	let button=saleDOM.querySelector('#details');
 	button.sale=sale
 	button.token=token

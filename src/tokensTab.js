@@ -66,6 +66,11 @@ function tokenFromObject(tokenObject, contract, base_uri){
 		img.style.display = 'block'
 	});
 
+	img.addEventListener('error', ()=>{
+		loading_img.style.display='none';
+		img.src = "imgs/failed-to-load.svg"
+	});
+
 	img.token=tokenObject
 	img.contract=contract
 	img.media = media
