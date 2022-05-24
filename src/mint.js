@@ -192,8 +192,8 @@ async function validateRoyalties(array) {
 	}
 
 	let royalty_sum = array.reduce((previous, current)=> previous + current.percentage, 0)
-	if(royalty_sum > 5000){
-		alert("Cannot have royalty more than 50%");
+	if(royalty_sum > 4000){
+		alert("Cannot have royalty more than 40%");
 		return false
 	}
 	
