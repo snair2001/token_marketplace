@@ -1,9 +1,11 @@
 {
-  "name": "static_frontend",
+  "name": "ignitus_marketplace_frontend",
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "parcel src/index.html --open",
+    "build-for-me":"parcel build src/index.html --public-url https://warstilide49.github.io/token_marketplace/"
   },
   "keywords": [],
   "author": "",
