@@ -5,11 +5,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "parcel src/index.html --open",
-    "build-for-me":"parcel build src/index.html --public-url https://warstilide49.github.io/token_marketplace/"
+    "build-for-me":"parcel build src/index.html --public-url http://ignithereum.com/token_marketplace/"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Santhosh Nair and Evin D Renji",
+  "license": "MIT",
   "dependencies": {
     "ipfs-http-client": "^56.0.3",
     "near-api-js": "^0.44.2",
